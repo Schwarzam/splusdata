@@ -21,4 +21,5 @@ These are the data that our internal Data Release 3 cover.
 ![](iDR3_footprint.png)
 
 Note that this is a experimental project, it depends on our connection and it may be slow sometimes. 
-Any doubts about this tool please write to Gustavo.b.schwarz@gmail.com
+
+Any doubts, sugestions or problems about this tool please write to Gustavo.b.schwarz@gmail.com
