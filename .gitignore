@@ -8,3 +8,4 @@ setup.py
 splusdata/__pycache__/
 splusdata/.ipynb_checkpoints/
 splusdata/splusdata.egg-info/
+splus_data.egg-info/
