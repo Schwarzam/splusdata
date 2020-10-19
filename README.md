@@ -12,11 +12,7 @@ or: ::
 
     pip3 install splusdata
 
-<iframe
-  src="https://carbon.now.sh/embed?bg=rgba(171%2C%20184%2C%20195%2C%201)&t=cobalt&wt=none&l=python&ds=true&dsyoff=20px&dsblur=68px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=df%2520%253D%2520splusdata.queryidr3(%27main3.1%27%252C%2520%255B%27RA%2520%253E%252048.9%27%252C%2520%27RA%2520%253C%252049%27%255D%252C%2520columns%253D%255B%27ID%27%252C%2520%27RA%27%252C%2520%27DEC%27%255D)"
-  style="width: 909px; height: 204px; border:0; transform: scale(1); overflow:hidden;"
-  sandbox="allow-scripts allow-same-origin">
-</iframe>
+<img src="https://carbon.now.sh/?bg=rgba(171%2C%20184%2C%20195%2C%201)&t=cobalt&wt=none&l=python&ds=true&dsyoff=20px&dsblur=68px&wc=true&wa=true&pv=56px&ph=56px&ln=false&fl=1&fm=Hack&fs=14px&lh=133%25&si=false&es=2x&wm=false&code=df%2520%253D%2520splusdata.queryidr3(%27main3.1%27%252C%2520%255B%27RA%2520%253E%252048.9%27%252C%2520%27RA%2520%253C%252049%27%255D%252C%2520columns%253D%255B%27ID%27%252C%2520%27RA%27%252C%2520%27DEC%27%255D)">
 
 <h3 align="center">All the catalogs are available on Google Drive at: <h3>
 <p align="center">https://drive.google.com/drive/folders/1A3rM4K0wgMu5n6OtUJAajoic_QsZZLzu<p>
