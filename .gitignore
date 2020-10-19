@@ -1,0 +1,10 @@
+splusdata.egg-info/
+__pycache__/
+build/
+.git
+dist/
+.DS_Store
+setup.py
+splusdata/__pycache__/
+splusdata/.ipynb_checkpoints/
+splusdata/splusdata.egg-info/
