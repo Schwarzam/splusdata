@@ -33,7 +33,8 @@ class searchcoords:
     idx2 = idx
 
     Field = Galaxy.NAME[idx2]
-
+    if 'STRIPE' in Field:
+      Field = Field.replace('_', '-')
     df = pd.read_csv('https://raw.githubusercontent.com/Schwarzam/Data-analyse---SPLUS-objs/master/fields.csv')
     Galaxy = df[df['NAME'] == Field]
 
@@ -60,7 +61,8 @@ class searchcoords:
     idx2 = idx
 
     Field = Galaxy.NAME[idx2]
-
+    if 'STRIPE' in Field:
+      Field = Field.replace('_', '-')
     return Field
 
   def search_obj(self):
@@ -84,6 +86,8 @@ class searchcoords:
     idx2 = idx
 
     Field = Galaxy.NAME[idx2]
+    if 'STRIPE' in Field:
+      Field = Field.replace('_', '-')
 
     whereField = pd.read_csv('https://raw.githubusercontent.com/Schwarzam/Data-analyse---SPLUS-objs/master/fields.csv')
     ans = whereField[whereField['NAME'] == Field]
