@@ -9,7 +9,7 @@ from astropy import wcs
 from astropy import coordinates as coord
 from astropy import units as u
 
-def get_fits(name, ra, dec, cut_size, band, filename=None):
+def get_fits(name, ra, dec, cut_size, band, filename=None, overwrite=False):
     warnings.simplefilter("ignore")
 
     response = urlopen(f'http://splus.cloud:8000/api/{name}/{ra}/{dec}/{cut_size}/{band}/0')
@@ -38,6 +38,6 @@ def get_fits(name, ra, dec, cut_size, band, filename=None):
                 new_hdu.data = np.array(value).astype('float64')
 
         if filename:
-            new_hdu.writeto(filename)
+            new_hdu.writeto(filename, overwrite=overwrite)
 
         return new_hdu
