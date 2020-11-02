@@ -96,6 +96,9 @@ class searchcoords:
         print('Field not in any Survey')
         return 0
 
+    if ans.SUBREGION.array[0].lower() == 'main3.4' and ra > 359.350071481257:
+        ans.SUBREGION = 'STRIPE82'
+    
     query = f"""SELECT "RA", "DEC", "ID", "Field" FROM "{ans.SUBREGION.array[0].lower()}" WHERE "RA" < {ra+0.02} and "RA" > {ra - 0.02} and "DEC" > {dec -0.02} and "DEC" < {dec + 0.02}"""
     Galaxy = pd.read_sql_query(query, engine)
 

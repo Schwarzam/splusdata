@@ -129,3 +129,7 @@ def format_cols(columns):
         if key == len(columns) - 1:
             x = x + str(f'"{col}"')
     return x
+
+def calibration_status():
+    print('Check calibration status at:')
+    print('https://docs.google.com/spreadsheets/d/1KE_hCD2YFEV-ZlADjpBSS6_OTe0TQtDwG98ZANljNxk/edit#gid=65322921')
