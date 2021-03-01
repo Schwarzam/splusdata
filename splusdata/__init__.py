@@ -41,6 +41,7 @@ class connect:
         self.lastcontent = image
         self.lastres = '12img'
         return image
+
     
     def get_cut(self, ra, dec, radius, band):
         res = requests.get("https://splus.cloud/api/collaboration/get_direct_link/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
@@ -79,7 +80,7 @@ class connect:
             "format": 'fits'
         }
 
-        res = requests.post(baselink , data = data, headers=headers)
+        res = requests.post(baselink , data = data, headers=self.headers)
         xmldoc = minidom.parse(io.BytesIO(res.content))
 
         try:
@@ -91,7 +92,7 @@ class connect:
 
             while process == 'EXECUTING':
                 print('Executing')
-                res = requests.get(baselink + jobID, headers=headers)
+                res = requests.get(baselink + jobID, headers=self.headers)
                 xmldoc = minidom.parse(io.BytesIO(res.content))
 
                 item = xmldoc.getElementsByTagName('phase')[0]
@@ -103,7 +104,7 @@ class connect:
                 link = item.attributes['xlink:href'].value
 
                 link = link.replace("http://127.0.0.1:8080", "https://splus.cloud")
-                res = requests.get(link, headers=headers)
+                res = requests.get(link, headers=self.headers)
                 
                 self.lastres = 'query'
                 self.lastcontent = Table.read(io.BytesIO(res.content))
