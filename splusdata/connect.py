@@ -31,8 +31,8 @@ class connect:
         self.lastres = ''
         
     
-    def twelve_band_img(self, ra, dec, radius):
-        res = requests.get("https://splus.cloud/api/collaboration/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius), headers=self.headers)
+    def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15):
+        res = requests.get("https://splus.cloud/api/collaboration/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str("R,I,F861,Z-G,F515,F660-U,F378,F395,F410,F430") + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -40,6 +40,17 @@ class connect:
         
         self.lastcontent = image
         self.lastres = '12img'
+        return image
+
+    def get_img(self, ra, dec, radius, R="I", G="R", B="G", stretch=3, Q=8):
+        res = requests.get("https://splus.cloud/api/collaboration/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q), headers=self.headers)
+        source = json.loads(res.content)
+        source['filename']
+        res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
+        image = Image.open(io.BytesIO(res.content))
+        
+        self.lastcontent = image
+        self.lastres = 'get_cut'
         return image
 
     
