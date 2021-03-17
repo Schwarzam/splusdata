@@ -32,7 +32,7 @@ class connect:
         
     
     def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15):
-        res = requests.get("https://splus.cloud/api/collaboration/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str("R,I,F861,Z-G,F515,F660-U,F378,F395,F410,F430") + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str("R,I,F861,Z-G,F515,F660-U,F378,F395,F410,F430") + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -43,7 +43,7 @@ class connect:
         return image
 
     def get_img(self, ra, dec, radius, R="I", G="R", B="G", stretch=3, Q=8):
-        res = requests.get("https://splus.cloud/api/collaboration/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -61,7 +61,7 @@ class connect:
             
             elif filepath != None:  
                 filepath = filepath + ".tar.gz"
-                res = requests.get("https://splus.cloud/api/collaboration/get_direct_link/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + "ALL", headers=self.headers)
+                res = requests.get("https://splus.cloud/api/get_direct_cut/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + "ALL", headers=self.headers)
                 
                 with open(filepath, 'wb') as f:
                     f.write(res.content)
@@ -69,7 +69,31 @@ class connect:
                     
                 return 'File saved to ' + filepath
             
-        res = requests.get("https://splus.cloud/api/collaboration/get_direct_link/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_direct_cut/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
+        hdu = fits.open(io.BytesIO(res.content))
+        if filepath != None:
+            hdu.writeto(filepath + ".fz")
+        
+        self.lastcontent = hdu
+        self.lastres = 'cut'
+        return hdu
+
+    def get_cut_weight(self, ra, dec, radius, band, filepath=None):
+        if band.upper() == 'ALL':
+            if filepath == None:
+                return 'You must save the file while getting "all" bands'
+            
+            elif filepath != None:  
+                filepath = filepath + ".tar.gz"
+                res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + "ALL", headers=self.headers)
+                
+                with open(filepath, 'wb') as f:
+                    f.write(res.content)
+                    f.close()
+                    
+                return 'File saved to ' + filepath
+            
+        res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         if filepath != None:
             hdu.writeto(filepath + ".fz")
@@ -78,15 +102,22 @@ class connect:
         self.lastres = 'cut'
         return hdu
     
-    
     def get_field(self, field, band):
-        res = requests.get("https://splus.cloud/api/collaboration/get_direct_field/" + str(field) + "/" + str(band) , headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_direct_field/" + str(field) + "/" + str(band) , headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         
         self.lastres = 'field'
         self.lastcontent = hdu
         return hdu  
-    
+
+    def get_field_weight(self, field, band):
+        res = requests.get("https://splus.cloud/api/get_direct_field_weight/" + str(field) + "/" + str(band) , headers=self.headers)
+        hdu = fits.open(io.BytesIO(res.content))
+        
+        self.lastres = 'field'
+        self.lastcontent = hdu
+        return hdu  
+
     def get_tap_tables(self):
         if self.collab:
             print("Tables and columns info at https://splus.cloud/")
