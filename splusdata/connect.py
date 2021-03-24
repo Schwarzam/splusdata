@@ -150,7 +150,6 @@ class connect:
             jobID = item.firstChild.data
 
             while process == 'EXECUTING':
-                print('Executing')
                 res = requests.get(baselink + jobID, headers=self.headers)
                 xmldoc = minidom.parse(io.BytesIO(res.content))
 
