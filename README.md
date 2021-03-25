@@ -14,11 +14,7 @@ or:
 
 There is a quick demo showing the functionalities of the package at https://github.com/Schwarzam/splusdata/blob/master/Demonstration.ipynb
 
-<h3 align="center">All the catalogs are available on Google Drive at: <h3>
-<p align="center">https://drive.google.com/drive/folders/1A3rM4K0wgMu5n6OtUJAajoic_QsZZLzu<p>
-
-These are the data that our internal Data Release 3 cover.
-![](iDR3_footprint.png)
+<h3> Documentation at: https://splus.cloud/documentation/python </h3>
 
 Note that this is a experimental project, it depends on our connection and it may be slow sometimes. 
 
