@@ -9,6 +9,8 @@ from xml.dom import minidom
 from astropy.table import Table
 import time
 
+from astropy.io.votable import from_table, writeto
+
 class connect:
     def __init__(self, username, password):
         
@@ -124,12 +126,12 @@ class connect:
         else:
             print("Tables and columns info available at https://splus.cloud/query/")
             
-    def query(self, query):
+    def query(self, query, table_upload=None):
         if self.collab:
             baselink = "https://splus.cloud/tap/tap/async/"
         else:
             baselink = "https://splus.cloud/public-TAP/tap/async/"
-            
+
         data = {
             "request": 'doQuery',
             "version": '1.0',
@@ -139,7 +141,49 @@ class connect:
             "format": 'fits'
         }
 
-        res = requests.post(baselink , data = data, headers=self.headers)
+        if table_upload:
+            if 'astropy.table' in str(type(table_upload)):
+                if len(table_upload) > 2000:
+                    print('Cutting to the first 2000 objects!')
+                    table_upload = table_upload[0:2000]
+                    table_upload = from_table(table_upload)
+
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+
+            elif 'astropy.io.votable' in str(type(table_upload)):
+                if table_upload.get_first_table().nrows > 2000:
+                    return 'votable bigger than 2000'
+                else:
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+
+            elif 'DataFrame' in str(type(table_upload)):
+                if len(table_upload) > 2000:
+                    print('Cutting to the first 2000 objects!')
+                    table_upload = table_upload[0:2000]
+
+                    table_upload = Table.from_pandas(table_upload)
+                    table_upload = from_table(table_upload)
+
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+
+            else:
+                return 'Table type not supported'
+
+            data['upload'] = 'upload,param:uplTable'
+            res = requests.post(baselink , data = data, headers=self.headers, files={'uplTable': IObytes.read()})
+
+        if not table_upload:
+            res = requests.post(baselink , data = data, headers=self.headers)
+
         xmldoc = minidom.parse(io.BytesIO(res.content))
 
         try:
