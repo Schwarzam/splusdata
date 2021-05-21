@@ -18,4 +18,4 @@ There is a quick demo showing the functionalities of the package at https://gith
 
 Note that this is a experimental project, it depends on our connection and it may be slow sometimes. 
 
-Any doubts, sugestions or problems about this tool please write to Gustavo.b.schwarz@gmail.com
+Any doubts, sugestions or problems about this tool please write to gustavo.b.schwarz@gmail.com
