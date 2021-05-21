@@ -140,12 +140,21 @@ class connect:
             "query": query,
             "format": 'fits'
         }
-
+        
+        
         if table_upload:
+            print(str(type(table_upload)))
             if 'astropy.table' in str(type(table_upload)):
-                if len(table_upload) > 2000:
-                    print('Cutting to the first 2000 objects!')
-                    table_upload = table_upload[0:2000]
+                if len(table_upload) > 6000:
+                    print('Cutting to the first 6000 objects!')
+                    table_upload = table_upload[0:6000]
+                    table_upload = from_table(table_upload)
+
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+                else:
                     table_upload = from_table(table_upload)
 
                     IObytes = io.BytesIO()
@@ -154,31 +163,35 @@ class connect:
                     IObytes.seek(0)
 
             elif 'astropy.io.votable' in str(type(table_upload)):
-                if table_upload.get_first_table().nrows > 2000:
-                    return 'votable bigger than 2000'
+                if table_upload.get_first_table().nrows > 6000:
+                    return 'votable bigger than 6000'
                 else:
                     IObytes = io.BytesIO()
                     writeto(table_upload, IObytes)
-
                     IObytes.seek(0)
 
             elif 'DataFrame' in str(type(table_upload)):
                 if len(table_upload) > 2000:
-                    print('Cutting to the first 2000 objects!')
-                    table_upload = table_upload[0:2000]
-
+                    print('Cutting to the first 6000 objects!')
+                    table_upload = table_upload[0:6000]
                     table_upload = Table.from_pandas(table_upload)
                     table_upload = from_table(table_upload)
-
                     IObytes = io.BytesIO()
                     writeto(table_upload, IObytes)
-
                     IObytes.seek(0)
+                else:
+                    table_upload = Table.from_pandas(table_upload)
+                    table_upload = from_table(table_upload)
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+                    IObytes.seek(0)
+                    
 
             else:
                 return 'Table type not supported'
 
             data['upload'] = 'upload,param:uplTable'
+            print(IObytes)
             res = requests.post(baselink , data = data, headers=self.headers, files={'uplTable': IObytes.read()})
 
         if not table_upload:
