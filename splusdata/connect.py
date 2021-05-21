@@ -143,7 +143,6 @@ class connect:
         
         
         if table_upload:
-            print(str(type(table_upload)))
             if 'astropy.table' in str(type(table_upload)):
                 if len(table_upload) > 6000:
                     print('Cutting to the first 6000 objects!')
@@ -191,7 +190,6 @@ class connect:
                 return 'Table type not supported'
 
             data['upload'] = 'upload,param:uplTable'
-            print(IObytes)
             res = requests.post(baselink , data = data, headers=self.headers, files={'uplTable': IObytes.read()})
 
         if not table_upload:
