@@ -1,3 +1,4 @@
 from splusdata.connect import connect
 
-from splusdata.features import classification, filterbw
+from splusdata.features import filterbw
+import splusdata.vacs
