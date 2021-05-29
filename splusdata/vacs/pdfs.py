@@ -9,13 +9,11 @@ def Calc_PDF(x, Weights, Means, STDs):
 # Carregamos os dados (recém baixados do splus.cloud)
 # PDF_Catalogue = pd.read_csv('../PDF_Test.csv')
 
-def Calculate_PDFs(PDF_Catalogue, x=None):
+def Calculate_PDFs(PDF_Catalogue, x=np.arange(0, 1, 0.001)):
     Final_PDFs = []
-    if x == None:
-        x = np.arange(0, 1, 0.001)
     for i in range(len(PDF_Catalogue)):
         Final_PDFs.append(Calc_PDF(x, np.fromstring(PDF_Catalogue['PDF_Weights'][i][1:-1], sep=','), 
                                       np.fromstring(PDF_Catalogue['PDF_Means'][i][1:-1], sep=','), 
                                       np.fromstring(PDF_Catalogue['PDF_STDs'][i][1:-1], sep=',')))
 
-    return Final_PDFs
+    return x, Final_PDFs
