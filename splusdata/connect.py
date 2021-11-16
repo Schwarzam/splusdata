@@ -55,6 +55,17 @@ class connect:
         self.lastres = 'get_cut'
         return image
 
+    def get_band_img(self, ra, dec, radius, band='R', mode='linear'):
+        res = requests.get("https://splus.cloud/api/get_band_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(mode), headers=self.headers)
+        source = json.loads(res.content)
+        source['filename']
+        res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
+        image = Image.open(io.BytesIO(res.content))
+        
+        self.lastcontent = image
+        self.lastres = 'get_band_image'
+        return image
+
     
     def get_cut(self, ra, dec, radius, band, filepath=None):
         if band.upper() == 'ALL':
