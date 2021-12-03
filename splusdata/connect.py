@@ -8,6 +8,7 @@ from urllib.parse import quote
 from xml.dom import minidom
 from astropy.table import Table
 import time
+import ast
 
 from astropy.io.votable import from_table, writeto
 
@@ -137,10 +138,14 @@ class connect:
         else:
             print("Tables and columns info available at https://splus.cloud/query/")
             
-    def query(self, query, table_upload=None):
+    def query(self, query, table_upload=None, publicdata=None):
         if self.collab:
             baselink = "https://splus.cloud/tap/tap/async/"
         else:
+            baselink = "https://splus.cloud/public-TAP/tap/async/"
+
+
+        if publicdata and self.collab:
             baselink = "https://splus.cloud/public-TAP/tap/async/"
 
         data = {
@@ -245,6 +250,15 @@ class connect:
         except:
             item = xmldoc.getElementsByTagName('INFO')
             print(item[0].attributes['value'].value, ": ", item[0].firstChild.data)
+
+
+    def checkcoords(self, ra, dec):
+        res = requests.get("https://splus.cloud/api/whichdr/" + str(ra) + "/" + str(dec) , headers=self.headers)
+        res = res.content.decode("utf-8")
+        
+        res = ast.literal_eval(res)
+        return res
+
     
     def get_last_result(self):
         return self.lastcontent
