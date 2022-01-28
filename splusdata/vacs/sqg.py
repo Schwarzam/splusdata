@@ -24,7 +24,7 @@ class SQGClass:
              'J0861_iso',
              'z_iso']
 
-    def __init__(self, model='RF16', verbose=False):
+    def __init__(self, model='auto', verbose=False):
         self.model = model
         self.verbose = verbose
         try:
@@ -190,9 +190,9 @@ class SQGClass:
         Keywords arguments:
         data -- dataframe containing information of the 12 S-PLUS ISO magnitudes already extincted corrected
         prob -- if true, estimates the probabilities for each class
-        model -- options are "both", "RF16" or "RF18". If "opt", returns classification from model trained with 12 S-PLUS bands
+        model -- options are "auto", "RF16" or "RF18". If "opt", returns classification from model trained with 12 S-PLUS bands
                  + 4 morphological features. If "RF18", returns classification from model trained with 12 S-PLUS bands + 2 WISE bands+
-                 4 morphological features, only for sources with WISE counterpart. If "both", return classification from the same model as "RF18" (flagged as 0) if
+                 4 morphological features, only for sources with WISE counterpart. If "auto", return classification from the same model as "RF18" (flagged as 0) if
                  the source has WISE counterpart, otherwise returns classification from model "RF16" (flagged as 1).
         match_irsa -- determines if cross-match with ALLWISE catalogue will be performed. If model == "RF16", match_irsa == False.
         returns a dataframe with classes
@@ -263,7 +263,7 @@ class SQGClass:
                 results = pd.concat([results, prob_wise_df], axis=1)
                 results.columns = ["CLASS", "PROB_QSO", "PROB_STAR", "PROB_GAL"]
 
-        elif self.model == "both":
+        elif self.model == "auto":
             data = self.check_match_irsa(data, match_irsa)
             data_wise = self.get_wise(data, self._feat_wise + self._error_wise)
             data_nowise = data.drop(data_wise.index)
@@ -293,7 +293,7 @@ class SQGClass:
                 results.columns = ["CLASS", "model_flag", "PROB_QSO", "PROB_STAR", "PROB_GAL"]
 
         else:
-            raise (ValueError)("Parameter 'model' should be 'RF16', 'RF18' or 'both'.")
+            raise (ValueError)("Parameter 'model' should be 'RF16', 'RF18' or 'auto'.")
 
         if verbose:
             print("Finished process.")
