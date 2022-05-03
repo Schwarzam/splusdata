@@ -158,7 +158,7 @@ class connect:
         }
         
         
-        if table_upload:
+        if str(type(table_upload)) != "<class 'NoneType'>":
             if 'astropy.table' in str(type(table_upload)):
                 if len(table_upload) > 6000:
                     print('Cutting to the first 6000 objects!')
