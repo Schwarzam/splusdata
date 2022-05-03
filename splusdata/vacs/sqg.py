@@ -87,8 +87,8 @@ class SQGClass:
         decmax = np.max(data["DEC"])
         col = ['ra', 'dec', 'w1mpro', 'w2mpro', 'w1snr', 'w2snr', 'w1sigmpro', 'w2sigmpro']
         if ramin < 2 and ramax > 358:
-            ramax = np.max(data.query("RA<2"))
-            ramin = np.min(data.query("RA>358"))
+            ramax = np.max(data.query("RA<2").RA)
+            ramin = np.min(data.query("RA>358").RA)
             query = f"""select {col[0]}, {col[1]}, {col[2]}, 
                                           {col[3]}, {col[4]}, {col[5]}, {col[6]}, {col[7]} from allwise_p3as_psd 
                                           where ra > {ramin - 0.15} or ra < {ramax + 0.15} and dec > {decmin - 0.15} and dec < {decmax + 0.15}"""
