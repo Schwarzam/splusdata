@@ -232,7 +232,7 @@ class connect:
                 item = xmldoc.getElementsByTagName('result')[0]
                 link = item.attributes['xlink:href'].value
 
-                link = link.replace("http://10.180.0.208:8080", "https://splus.cloud").replace("http://10.180.0.209:8080", "https://splus.cloud").replace("http://10.180.0.207:8080", "https://splus.cloud").replace("http://10.180.0.219:8080", "https://splus.cloud")
+                link = link.replace("http://192.168.10.23:8080", "https://splus.cloud").replace("http://10.180.0.209:8080", "https://splus.cloud").replace("http://10.180.0.207:8080", "https://splus.cloud").replace("http://10.180.0.219:8080", "https://splus.cloud")
                 res = requests.get(link, headers=self.headers)
                 
                 self.lastres = 'query'
