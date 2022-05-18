@@ -13,7 +13,15 @@ import ast
 from astropy.io.votable import from_table, writeto
 
 class connect:
+    """Class that logs in into splus.cloud and perform all types of download operation. 
+    """    
     def __init__(self, username, password):
+        """Class must be initialized with splus.cloud user and password.
+
+        Args:
+            username (str): splus.cloud username
+            password (str): splus.cloud pasword
+        """        
         
         data = {'username':username, 'password':password}
         res = requests.post("https://splus.cloud/api/auth/login", data = data)
@@ -34,8 +42,25 @@ class connect:
         self.lastres = ''
         
     
-    def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15):
-        res = requests.get("https://splus.cloud/api/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str("R,I,F861,Z-G,F515,F660-U,F378,F395,F410,F430") + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
+    def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15, R="R,I,F861,Z", G="G,F515,F660", B="U,F378,F395,F410,F430"):        
+        """Function to get twelve band composed images. 
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+            radius (int): Image size in pixels. Final size will be (radius X radius)
+            noise (float, optional): Image noise value. Defaults to 0.15.
+            saturation (float, optional): Image saturation value. Defaults to 0.15.    
+            R (str, optional): Combinations of bands to compose red. Defaults to "R,I,F861,Z".
+            G (str, optional): Combinations of bands to compose green. Defaults to "G,F515,F660".
+            B (str, optional): Combinations of bands to compose blue. Defaults to "U,F378,F395,F410,F430".
+
+        Returns:
+            PIL.Image: Image requested
+        """             
+
+  
+        res = requests.get("https://splus.cloud/api/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + R + "-" + G + "-" + B + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -46,6 +71,21 @@ class connect:
         return image
 
     def get_img(self, ra, dec, radius, R="I", G="R", B="G", stretch=3, Q=8):
+        """Function to get three band composed images made by lupton. 
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+            radius (int): Image size in pixels. Final size will be (radius X radius)
+            R (str, optional): Band to compose red. Defaults to "I".
+            G (str, optional): Band to compose green. Defaults to "R".
+            B (str, optional): Band to compose blue. Defaults to "G".
+            stretch (int, optional): Stretch of image, same of make_lupton_rgb from astropy. Defaults to 3.
+            Q (int, optional): Q of image, same of make_lupton_rgb from astropy. Defaults to 8.
+
+        Returns:
+            PIL.Image: Image requested
+        """        
         res = requests.get("https://splus.cloud/api/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
@@ -57,6 +97,18 @@ class connect:
         return image
 
     def get_band_img(self, ra, dec, radius, band='R', mode='linear'):
+        """Get image composed with one band.
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+            radius (int): Image size in pixels. Final size will be (radius X radius)
+            band (str, optional): Band to compose image. Defaults to 'R'.
+            mode (str, optional): Mode. Defaults to 'linear'.
+
+        Returns:
+            PIL.Image: Image requested
+        """        
         res = requests.get("https://splus.cloud/api/get_band_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(mode), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
@@ -69,6 +121,18 @@ class connect:
 
     
     def get_cut(self, ra, dec, radius, band, filepath=None):
+        """Get fits cut.
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+            radius (int): Image size in pixels. Final size will be (radius X radius)
+            band (str): Band requested
+            filepath (str, optional): file path to save result. Defaults to None.
+
+        Returns:
+            astropy.io.fits: Fits file with image. 
+        """        
         if band.upper() == 'ALL':
             if filepath == None:
                 return 'You must save the file while getting "all" bands'
@@ -93,6 +157,18 @@ class connect:
         return hdu
 
     def get_cut_weight(self, ra, dec, radius, band, filepath=None):
+        """Get weight image fits cut. 
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+            radius (int): Image size in pixels. Final size will be (radius X radius)
+            band (str): Band requested
+            filepath (str, optional): file path to save result. Defaults to None.
+
+        Returns:
+            astropy.io.fits: Fits file with image. 
+        """        
         if band.upper() == 'ALL':
             if filepath == None:
                 return 'You must save the file while getting "all" bands'
@@ -117,6 +193,15 @@ class connect:
         return hdu
     
     def get_field(self, field, band):
+        """Get whole 11k field fits.
+
+        Args:
+            field (str): field name. 
+            band (str): Band.
+
+        Returns:
+            astropy.io.fits: Fits file with image. 
+        """        
         res = requests.get("https://splus.cloud/api/get_direct_field/" + str(field) + "/" + str(band) , headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         
@@ -125,6 +210,15 @@ class connect:
         return hdu  
 
     def get_field_weight(self, field, band):
+        """Get whole 11k weight field fits.
+
+        Args:
+            field (str): field name. 
+            band (str): Band.
+
+        Returns:
+            astropy.io.fits: Fits file with image. 
+        """        
         res = requests.get("https://splus.cloud/api/get_direct_field_weight/" + str(field) + "/" + str(band) , headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         
@@ -133,12 +227,22 @@ class connect:
         return hdu  
 
     def get_tap_tables(self):
-        if self.collab:
-            print("Tables and columns info at https://splus.cloud/")
-        else:
-            print("Tables and columns info available at https://splus.cloud/query/")
+        """Get info about available tables.
+        """        
+
+        print("Tables and columns available at https://splus.cloud/query/")
             
     def query(self, query, table_upload=None, publicdata=None):
+        """Perform async queries on splus cloud TAP service. 
+
+        Args:
+            query (str): query itself.
+            table_upload (pandas.DataFrame, optional): table to upload. Defaults to None.
+            publicdata (bool, optional): If internal wants to access public data. Defaults to None.
+
+        Returns:
+            astropy.table.Table: result table.
+        """        
         if self.collab:
             baselink = "https://splus.cloud/tap/tap/async/"
         else:
@@ -253,6 +357,14 @@ class connect:
 
 
     def checkcoords(self, ra, dec):
+        """Check if coords are in footprint
+
+        Args:
+            ra (float): RA coordinate in degrees. 
+            dec (float): DEC coordinate in degrees.
+        Returns:
+            dict: result.
+        """        
         res = requests.get("https://splus.cloud/api/whichdr/" + str(ra) + "/" + str(dec) , headers=self.headers)
         res = res.content.decode("utf-8")
         
@@ -261,4 +373,9 @@ class connect:
 
     
     def get_last_result(self):
+        """If you missed to save your last query or image into a variable, you may get it here.
+
+        Returns:
+            _type_: Last result, may be image or query. 
+        """        
         return self.lastcontent
