@@ -290,7 +290,7 @@ class connect:
                     IObytes.seek(0)
 
             elif 'DataFrame' in str(type(table_upload)):
-                if len(table_upload) > 2000:
+                if len(table_upload) > 6000:
                     print('Cutting to the first 6000 objects!')
                     table_upload = table_upload[0:6000]
                     table_upload = Table.from_pandas(table_upload)
