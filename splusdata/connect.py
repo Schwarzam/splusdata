@@ -9,19 +9,24 @@ from xml.dom import minidom
 from astropy.table import Table
 import time
 import ast
+from getpass import getpass
 
 from astropy.io.votable import from_table, writeto
 
 class connect:
     """Class that logs in into splus.cloud and perform all types of download operation. 
     """    
-    def __init__(self, username, password):
+    def __init__(self, username=None, password=None):
         """Class must be initialized with splus.cloud user and password.
 
         Args:
-            username (str): splus.cloud username
-            password (str): splus.cloud pasword
+            username (str, optional): splus.cloud username
+            password (str, optional): splus.cloud pasword
         """        
+
+        if not username or not password:
+            username = input("splus.cloud username: ")
+            password = getpass("splus.cloud password: ")
         
         data = {'username':username, 'password':password}
         res = requests.post("https://splus.cloud/api/auth/login", data = data)
@@ -42,7 +47,7 @@ class connect:
         self.lastres = ''
         
     
-    def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15, R="R,I,F861,Z", G="G,F515,F660", B="U,F378,F395,F410,F430"):        
+    def twelve_band_img(self, ra, dec, radius, noise=0.15, saturation=0.15, R="R,I,F861,Z", G="G,F515,F660", B="U,F378,F395,F410,F430", option=1):        
         """Function to get twelve band composed images. 
 
         Args:
@@ -54,13 +59,13 @@ class connect:
             R (str, optional): Combinations of bands to compose red. Defaults to "R,I,F861,Z".
             G (str, optional): Combinations of bands to compose green. Defaults to "G,F515,F660".
             B (str, optional): Combinations of bands to compose blue. Defaults to "U,F378,F395,F410,F430".
-
+            option (str, optional): in case a coordinate overlap over two fields, use option = 2 if you want the second field.
         Returns:
             PIL.Image: Image requested
         """             
 
   
-        res = requests.get("https://splus.cloud/api/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + R + "-" + G + "-" + B + "/" + str(noise) + "/" + str(saturation), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + R + "-" + G + "-" + B + "/" + str(noise) + "/" + str(saturation) + "/" + str(option), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -70,7 +75,7 @@ class connect:
         self.lastres = '12img'
         return image
 
-    def get_img(self, ra, dec, radius, R="I", G="R", B="G", stretch=3, Q=8):
+    def get_img(self, ra, dec, radius, R="I", G="R", B="G", stretch=3, Q=8, option=1):
         """Function to get three band composed images made by lupton. 
 
         Args:
@@ -82,11 +87,11 @@ class connect:
             B (str, optional): Band to compose blue. Defaults to "G".
             stretch (int, optional): Stretch of image, same of make_lupton_rgb from astropy. Defaults to 3.
             Q (int, optional): Q of image, same of make_lupton_rgb from astropy. Defaults to 8.
-
+            option (str, optional): in case a coordinate overlap over two fields, use option = 2 if you want the second field.
         Returns:
             PIL.Image: Image requested
         """        
-        res = requests.get("https://splus.cloud/api/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_lupton_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(R) + "/" + str(G) + "/" + str(B) + "/" + str(stretch) + "/" + str(Q) + "/" + str(option), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -96,7 +101,7 @@ class connect:
         self.lastres = 'get_cut'
         return image
 
-    def get_band_img(self, ra, dec, radius, band='R', mode='linear'):
+    def get_band_img(self, ra, dec, radius, band='R', mode='linear', option=1):
         """Get image composed with one band.
 
         Args:
@@ -105,11 +110,11 @@ class connect:
             radius (int): Image size in pixels. Final size will be (radius X radius)
             band (str, optional): Band to compose image. Defaults to 'R'.
             mode (str, optional): Mode. Defaults to 'linear'.
-
+            option (str, optional): in case a coordinate overlap over two fields, use option = 2 if you want the second field.
         Returns:
             PIL.Image: Image requested
         """        
-        res = requests.get("https://splus.cloud/api/get_band_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(mode), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_band_image/" + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(mode) + "/" + str(option), headers=self.headers)
         source = json.loads(res.content)
         source['filename']
         res = requests.get("https://splus.cloud" + source['filename'], headers=self.headers)
@@ -120,7 +125,7 @@ class connect:
         return image
 
     
-    def get_cut(self, ra, dec, radius, band, filepath=None):
+    def get_cut(self, ra, dec, radius, band, filepath=None, option=1):
         """Get fits cut.
 
         Args:
@@ -129,7 +134,7 @@ class connect:
             radius (int): Image size in pixels. Final size will be (radius X radius)
             band (str): Band requested
             filepath (str, optional): file path to save result. Defaults to None.
-
+            option (str, optional): in case a coordinate overlap over two fields, use option = 2 if you want the second field.
         Returns:
             astropy.io.fits: Fits file with image. 
         """        
@@ -147,7 +152,7 @@ class connect:
                     
                 return 'File saved to ' + filepath
             
-        res = requests.get("https://splus.cloud/api/get_direct_cut/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_direct_cut/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(option), headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         if filepath != None:
             hdu.writeto(filepath + ".fz")
@@ -156,7 +161,7 @@ class connect:
         self.lastres = 'cut'
         return hdu
 
-    def get_cut_weight(self, ra, dec, radius, band, filepath=None):
+    def get_cut_weight(self, ra, dec, radius, band, filepath=None, option=1):
         """Get weight image fits cut. 
 
         Args:
@@ -165,7 +170,7 @@ class connect:
             radius (int): Image size in pixels. Final size will be (radius X radius)
             band (str): Band requested
             filepath (str, optional): file path to save result. Defaults to None.
-
+            option (str, optional): in case a coordinate overlap over two fields, use option = 2 if you want the second field.
         Returns:
             astropy.io.fits: Fits file with image. 
         """        
@@ -175,7 +180,7 @@ class connect:
             
             elif filepath != None:  
                 filepath = filepath + ".tar.gz"
-                res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + "ALL", headers=self.headers)
+                res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + "ALL" + "/" + str(option), headers=self.headers)
                 
                 with open(filepath, 'wb') as f:
                     f.write(res.content)
@@ -183,7 +188,7 @@ class connect:
                     
                 return 'File saved to ' + filepath
             
-        res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band), headers=self.headers)
+        res = requests.get("https://splus.cloud/api/get_direct_cut_weight/"  + str(ra) + "/" + str(dec) + "/" + str(radius) + "/" + str(band) + "/" + str(option), headers=self.headers)
         hdu = fits.open(io.BytesIO(res.content))
         if filepath != None:
             hdu.writeto(filepath + ".fz")
