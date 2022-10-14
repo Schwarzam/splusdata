@@ -12,3 +12,5 @@ splus_data.egg-info/
 
 .ipynb_checkpoints/
 .ipynb_checkpoints
+
+site/

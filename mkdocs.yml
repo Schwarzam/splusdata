@@ -1,0 +1,7 @@
+site_name: splusdata
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings

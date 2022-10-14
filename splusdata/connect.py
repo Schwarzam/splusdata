@@ -17,7 +17,14 @@ class connect:
     """Class that logs in into splus.cloud and perform all types of download operation. 
     """    
     def __init__(self, username=None, password=None):
-        """Class must be initialized with splus.cloud user and password.
+        """Class may be initialized with splus.cloud user and password. If left in blanck, user and password will be asked on the runtime. 
+        Once logged in you may use all main tools from this class.
+
+        Examples:
+            >>> conn = splusdata.connect('spcloud_user', 'password')
+            You're connected.
+            >>> conn.get_cut(ra=0.1, dec=0.1, radius=100, band='R')
+            [<astropy.io.fits.hdu.image.PrimaryHDU object at 0x7f1bd283fe80>, <astropy.io.fits.hdu.compressed.CompImageHDU object at 0x7f1bd283fca0>]
 
         Args:
             username (str, optional): splus.cloud username
