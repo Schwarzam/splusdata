@@ -163,6 +163,21 @@
 
   
   
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
     
   
   
@@ -302,21 +317,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/" class="md-nav__link">
-        Tutorials
-      </a>
     </li>
   
 
@@ -872,11 +872,25 @@
 <span class="normal">383</span>
 <span class="normal">384</span>
 <span class="normal">385</span>
-<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">connect</span><span class="p">:</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">connect</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Class that logs in into splus.cloud and perform all types of download operation. </span>
 <span class="sd">    &quot;&quot;&quot;</span>    
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Class must be initialized with splus.cloud user and password.</span>
+        <span class="sd">&quot;&quot;&quot;Class may be initialized with splus.cloud user and password. If left in blanck, user and password will be asked on the runtime. </span>
+<span class="sd">        Once logged in you may use all main tools from this class.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; conn = splusdata.connect(&#39;spcloud_user&#39;, &#39;password&#39;)</span>
+<span class="sd">            You&#39;re connected.</span>
+<span class="sd">            &gt;&gt;&gt; conn.get_cut(ra=0.1, dec=0.1, radius=100, band=&#39;R&#39;)</span>
+<span class="sd">            [&lt;astropy.io.fits.hdu.image.PrimaryHDU object at 0x7f1bd283fe80&gt;, &lt;astropy.io.fits.hdu.compressed.CompImageHDU object at 0x7f1bd283fca0&gt;]</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            username (str, optional): splus.cloud username</span>
@@ -1270,7 +1284,15 @@
 
   <div class="doc doc-contents ">
   
-      <p>Class must be initialized with splus.cloud user and password.</p>
+      <p>Class may be initialized with splus.cloud user and password. If left in blanck, user and password will be asked on the runtime. 
+Once logged in you may use all main tools from this class.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span> <span class="o">=</span> <span class="n">splusdata</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;spcloud_user&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">)</span>
+<span class="go">You&#39;re connected.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span><span class="o">.</span><span class="n">get_cut</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="s1">&#39;R&#39;</span><span class="p">)</span>
+<span class="go">[&lt;astropy.io.fits.hdu.image.PrimaryHDU object at 0x7f1bd283fe80&gt;, &lt;astropy.io.fits.hdu.compressed.CompImageHDU object at 0x7f1bd283fca0&gt;]</span>
+</code></pre></div>
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -1336,8 +1358,22 @@
 <span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
-<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class must be initialized with splus.cloud user and password.</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class may be initialized with splus.cloud user and password. If left in blanck, user and password will be asked on the runtime. </span>
+<span class="sd">    Once logged in you may use all main tools from this class.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; conn = splusdata.connect(&#39;spcloud_user&#39;, &#39;password&#39;)</span>
+<span class="sd">        You&#39;re connected.</span>
+<span class="sd">        &gt;&gt;&gt; conn.get_cut(ra=0.1, dec=0.1, radius=100, band=&#39;R&#39;)</span>
+<span class="sd">        [&lt;astropy.io.fits.hdu.image.PrimaryHDU object at 0x7f1bd283fe80&gt;, &lt;astropy.io.fits.hdu.compressed.CompImageHDU object at 0x7f1bd283fca0&gt;]</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        username (str, optional): splus.cloud username</span>
@@ -1438,20 +1474,20 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">371</span>
 <span class="normal">372</span>
 <span class="normal">373</span>
 <span class="normal">374</span>
 <span class="normal">375</span>
 <span class="normal">376</span>
-<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">checkcoords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">):</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">checkcoords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check if coords are in footprint</span>
 
 <span class="sd">    Args:</span>
@@ -1578,14 +1614,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
@@ -1599,7 +1628,14 @@
 <span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span>
-<span class="normal">125</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_band_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_band_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get image composed with one band.</span>
 
 <span class="sd">    Args:</span>
@@ -1734,14 +1770,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
@@ -1768,7 +1797,14 @@
 <span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get fits cut.</span>
 
 <span class="sd">    Args:</span>
@@ -1916,14 +1952,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
 <span class="normal">174</span>
@@ -1950,7 +1979,14 @@
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_cut_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_cut_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get weight image fits cut. </span>
 
 <span class="sd">    Args:</span>
@@ -2058,14 +2094,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">207</span>
 <span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
@@ -2073,7 +2102,14 @@
 <span class="normal">212</span>
 <span class="normal">213</span>
 <span class="normal">214</span>
-<span class="normal">215</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">band</span><span class="p">):</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">band</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get whole 11k field fits.</span>
 
 <span class="sd">    Args:</span>
@@ -2162,14 +2198,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">224</span>
 <span class="normal">225</span>
 <span class="normal">226</span>
 <span class="normal">227</span>
@@ -2177,7 +2206,14 @@
 <span class="normal">229</span>
 <span class="normal">230</span>
 <span class="normal">231</span>
-<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_field_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">band</span><span class="p">):</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_field_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">band</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get whole 11k weight field fits.</span>
 
 <span class="sd">    Args:</span>
@@ -2336,14 +2372,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 85</span>
 <span class="normal"> 86</span>
 <span class="normal"> 87</span>
 <span class="normal"> 88</span>
@@ -2360,7 +2389,14 @@
 <span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function to get three band composed images made by lupton. </span>
 
 <span class="sd">    Args:</span>
@@ -2424,13 +2460,13 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_last_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_last_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;If you missed to save your last query or image into a variable, you may get it here.</span>
 
 <span class="sd">    Returns:</span>
@@ -2459,11 +2495,11 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tap_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tap_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get info about available tables.</span>
 <span class="sd">    &quot;&quot;&quot;</span>        
 
@@ -2551,14 +2587,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">247</span>
 <span class="normal">248</span>
 <span class="normal">249</span>
 <span class="normal">250</span>
@@ -2672,7 +2701,14 @@
 <span class="normal">358</span>
 <span class="normal">359</span>
 <span class="normal">360</span>
-<span class="normal">361</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">table_upload</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">publicdata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">table_upload</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">publicdata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Perform async queries on splus cloud TAP service. </span>
 
 <span class="sd">    Args:</span>
@@ -2937,14 +2973,7 @@
 
       <details class="quote">
         <summary>Source code in <code>splusdata/connect.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
@@ -2963,7 +2992,14 @@
 <span class="normal">73</span>
 <span class="normal">74</span>
 <span class="normal">75</span>
-<span class="normal">76</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">twelve_band_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">saturation</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="s2">&quot;R,I,F861,Z&quot;</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="s2">&quot;G,F515,F660&quot;</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="s2">&quot;U,F378,F395,F410,F430&quot;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>        
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">twelve_band_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">saturation</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="s2">&quot;R,I,F861,Z&quot;</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="s2">&quot;G,F515,F660&quot;</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="s2">&quot;U,F378,F395,F410,F430&quot;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>        
     <span class="sd">&quot;&quot;&quot;Function to get twelve band composed images. </span>
 
 <span class="sd">    Args:</span>
@@ -3032,7 +3068,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer" >
       
         
-        <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home" rel="prev">
+        <a href="../examples/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Examples" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
@@ -3041,26 +3077,11 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Home
+              Examples
             </div>
           </div>
         </a>
       
-      
-        
-        <a href="../tutorials/" class="md-footer__link md-footer__link--next" aria-label="Next: Tutorials" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Tutorials
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
       
     </nav>
   
