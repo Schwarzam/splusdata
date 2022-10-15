@@ -1,6 +1,6 @@
 ## Source for pip package splusdata
 
-![](https://splus.cloud/images/SiglaExtenso_Colorido1_TextoAzulEscuro.png)
+![](https://splus.cloud/images/splus_logo_fundo_branco.jpg)
 
 This is a tool mainly to query and download S-PLUS data.
 
