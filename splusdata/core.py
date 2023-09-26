@@ -288,6 +288,8 @@ class Core:
         
         return res.content
     
+    
+    ## query method (same from old API)
     def query(self, query, table_upload=None, publicdata=None):
         from astropy.io.votable import from_table, writeto
         from xml.dom import minidom
