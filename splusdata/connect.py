@@ -4,9 +4,7 @@ import astropy
 from astropy.io import fits
 import io
 from PIL import Image
-from urllib.parse import quote
-from xml.dom import minidom
-from astropy.table import Table
+
 import time
 import ast
 from getpass import getpass
@@ -245,6 +243,8 @@ class connect:
         print("Tables and columns available at https://splus.cloud/query/")
             
     def query(self, query, table_upload=None, publicdata=None):
+        from xml.dom import minidom
+        from astropy.table import Table
         """Perform async queries on splus cloud TAP service. 
 
         Args:

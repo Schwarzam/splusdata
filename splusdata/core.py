@@ -1,10 +1,11 @@
 import requests
-from getpass import getpass
-
+import time
 import json
 import io 
 
-from PIL import Image
+from getpass import getpass
+
+# TODO: DEPRECATE and remove imports on old API
 
 ## Error handling
 class AuthenticationError(Exception):
@@ -18,6 +19,7 @@ class SplusError(Exception):
 """ FIXME: Put in another folder later"""
 
 def open_image(image_bytes):
+    from PIL import Image
     im = Image.open(io.BytesIO(image_bytes))
     return im
 
@@ -285,9 +287,138 @@ class Core:
             raise SplusError("File not recognized, may be corrupted or not exist")
         
         return res.content
+    
+    def query(self, query, table_upload=None, publicdata=None):
+        from astropy.io.votable import from_table, writeto
+        from xml.dom import minidom
+        from astropy.table import Table
+        
+        """Perform async queries on splus cloud TAP service. 
+
+        Args:
+            query (str): query itself.
+            table_upload (pandas.DataFrame, optional): table to upload. Defaults to None.
+            publicdata (bool, optional): If internal wants to access public data. Defaults to None.
+
+        Returns:
+            astropy.table.Table: result table.
+        """        
+        if self.collab:
+            baselink = "https://splus.cloud/tap/tap/async/"
+        else:
+            baselink = "https://splus.cloud/public-TAP/tap/async/"
+
+
+        if publicdata and self.collab:
+            baselink = "https://splus.cloud/public-TAP/tap/async/"
+
+        data = {
+            "request": 'doQuery',
+            "version": '1.0',
+            "lang": 'ADQL',
+            "phase": 'run',
+            "query": query,
+            "format": 'fits'
+        }
+        
+        
+        if str(type(table_upload)) != "<class 'NoneType'>":
+            if 'astropy.table' in str(type(table_upload)):
+                if len(table_upload) > 6000:
+                    print('Cutting to the first 6000 objects!')
+                    table_upload = table_upload[0:6000]
+                    table_upload = from_table(table_upload)
+
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+                else:
+                    table_upload = from_table(table_upload)
+
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+
+                    IObytes.seek(0)
+
+            elif 'astropy.io.votable' in str(type(table_upload)):
+                if table_upload.get_first_table().nrows > 6000:
+                    return 'votable bigger than 6000'
+                else:
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+                    IObytes.seek(0)
+
+            elif 'DataFrame' in str(type(table_upload)):
+                if len(table_upload) > 6000:
+                    print('Cutting to the first 6000 objects!')
+                    table_upload = table_upload[0:6000]
+                    table_upload = Table.from_pandas(table_upload)
+                    table_upload = from_table(table_upload)
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+                    IObytes.seek(0)
+                else:
+                    table_upload = Table.from_pandas(table_upload)
+                    table_upload = from_table(table_upload)
+                    IObytes = io.BytesIO()
+                    writeto(table_upload, IObytes)
+                    IObytes.seek(0)
+                    
+
+            else:
+                return 'Table type not supported'
+
+            data['upload'] = 'upload,param:uplTable'
+            res = requests.post(baselink , data = data, headers=self.headers, files={'uplTable': IObytes.read()})
+
+        if not table_upload:
+            res = requests.post(baselink , data = data, headers=self.headers)
+
+        xmldoc = minidom.parse(io.BytesIO(res.content))
+
+        try:
+            item = xmldoc.getElementsByTagName('phase')[0]
+            process = item.firstChild.data
+
+            item = xmldoc.getElementsByTagName('jobId')[0]
+            jobID = item.firstChild.data
+
+            while process == 'EXECUTING':
+                res = requests.get(baselink + jobID, headers=self.headers)
+                xmldoc = minidom.parse(io.BytesIO(res.content))
+
+                item = xmldoc.getElementsByTagName('phase')[0]
+                process = item.firstChild.data
+                time.sleep(5)
+
+            if process == 'COMPLETED':
+                item = xmldoc.getElementsByTagName('result')[0]
+                link = item.attributes['xlink:href'].value
+
+                link = link.replace("http://192.168.10.23:8080", "https://splus.cloud").replace("http://10.180.0.209:8080", "https://splus.cloud").replace("http://10.180.0.207:8080", "https://splus.cloud").replace("http://10.180.0.219:8080", "https://splus.cloud")
+                res = requests.get(link, headers=self.headers)
+                
+                self.lastres = 'query'
+                self.lastcontent = Table.read(io.BytesIO(res.content))
+                print('finished')
+                
+                return self.lastcontent
+
+            if process == 'ERROR':
+                item = xmldoc.getElementsByTagName('message')[0]
+                message = item.firstChild.data
+
+                print("Error: ", message)
+
+        except:
+            item = xmldoc.getElementsByTagName('INFO')
+            print(item[0].attributes['value'].value, ": ", item[0].firstChild.data)
 
 if __name__ == "__main__":
     pass
+
+    ## TESTS
     #core = Core()
     #core.field_frame('STRIPE82-0002', "R")
     
