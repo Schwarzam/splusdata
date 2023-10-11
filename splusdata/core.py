@@ -32,11 +32,14 @@ def open_fits(fits_bytes):
     return fits.open(io.BytesIO(fits_bytes))
 
 def save_fits(fits, filename):
+    from astropy.io.fits import CompImageHDU
+    sufix = ""
     for ext in fits:
         # check if extension is compressed
-        print(ext.header)
+        if isinstance(ext, CompImageHDU):
+            sufix = ".fz"
     
-    fits.writeto(filename + ".fz") 
+    fits.writeto(filename + sufix, overwrite=True)
     
 # ----------------------------
 
