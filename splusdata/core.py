@@ -161,16 +161,24 @@ class Core:
             If the response contains an error.
         """
         response = self.session.request(method, url, data=data, json=json_, params=params, headers=self.headers)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        
+        resjson = None
         try:
-            if 'error' in response.json():
-                raise SplusError(response.json()['error'])
+            resjson = response.json()
         except:
             pass
         
+        if resjson:
+            if 'error' in resjson:
+                raise SplusError(resjson['error'])
+            else:
+                response.raise_for_status()  # Raise an exception for HTTP errors
+        else:
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        
         return response
     
-    def field_frame(self, field, band, filename=None, _data_release=None):
+    def field_frame(self, field, band, weight = False, filename=None, _data_release=None):
         """
         Downloads a FITS file for a given field and band.
 
@@ -190,7 +198,13 @@ class Core:
         astropy.io.fits.HDUList
             The FITS data for the requested field and band.
         """
-        res = self._make_request('POST', f"{self.SERVER_URL}/download_frame/{field}/{band}/{_data_release}")
+        data = {
+            "fieldname": field,
+            "band": band,
+            "weight": weight,
+            "dr": _data_release
+        }
+        res = self._make_request('POST', f"{self.SERVER_URL}/download_frame", json_=data)
         
         frame = open_fits(res.content)
         if filename:
@@ -287,6 +301,159 @@ class Core:
             raise SplusError("File not recognized, may be corrupted or not exist")
         
         return res.content
+    
+    def stamp(self, ra, dec, size, band, weight = False, option = 1, filename=None, _data_release=None):
+        """
+        Downloads a FITS file for a given field and band.
+
+        Parameters
+        ----------
+        ra : float
+            The RA of the center of the stamp.
+        dec : float
+            The DEC of the center of the stamp.
+        size : float
+            The size of the stamp in arcseconds.
+        band : str
+            The name of the band to download the FITS file for.
+        weight : bool, optional
+            Whether to download the weight map for the stamp.
+        option : int, optional
+            The option to use for the match 1 -> first match, 2 -> second match.
+        filename : str, optional
+            The name of the file to save the FITS data to.
+        _data_release : str, optional
+            The data release to download the FITS file for.
+
+        Returns
+        -------
+        astropy.io.fits.HDUList
+            The FITS data for the requested field and band.
+        """
+        data = {
+            "ra": ra,
+            "dec": dec,
+            "band": band,
+            "option": str(option),
+            "size": size,
+            "weight": weight,
+            "dr": _data_release
+        }
+        res = self._make_request('POST', f"{self.SERVER_URL}/download_stamp", json_=data)
+        
+        
+        frame = open_fits(res.content)
+        if filename:
+            save_fits(frame, filename=filename)
+        return frame
+    
+    def lupton_rgb(self, ra, dec, size, R="I", G="R", B="G", Q=8, stretch=3, option=1, filename=None, _data_release=None):
+        """
+        Downloads a lupton image.
+
+        Parameters
+        ----------
+        ra : float
+            The RA of the center of the stamp.
+        dec : float
+            The DEC of the center of the stamp.
+        size : float
+            The size of the stamp in arcseconds.
+        R : str
+            The name of the band to use for the red channel.
+        G : str
+            The name of the band to use for the green channel.
+        B : str
+            The name of the band to use for the blue channel.
+        Q : int, optional
+            Q of image, same of make_lupton_rgb from astropy. Defaults to 8.
+        stretch : int, optional
+            Stretch of image, same of make_lupton_rgb from astropy. Defaults to 3.
+        option : int, optional
+            The option to use for the match 1 -> first match, 2 -> second match.
+        filename : str, optional
+            The name of the file to save the FITS data to.
+        _data_release : str, optional
+            The data release to download the FITS file for.
+
+        Returns
+        -------
+        astropy.io.fits.HDUList
+            The FITS data for the requested field and band.
+        """
+        data = {
+            "ra": ra,
+            "dec": dec,
+            "size": size,
+            "R": R,
+            "G": G,
+            "B": B,
+            "Q": Q,
+            "stretch": stretch,
+            "option": str(option),
+            "dr": _data_release
+        }
+        res = self._make_request('POST', f"{self.SERVER_URL}/lupton_image", json_=data)
+        
+        
+        frame = open_image(res.content)
+        if filename:
+            save_image(res.content, filename=filename)
+        return frame
+    
+    def trilogy_image(self, ra, dec, size, R="R,I,F861,Z", G="G,F515,F660", B="U,F378,F395,F410,F430", noiselum=0.15, satpercent=0.15, colorsatfac=2, option=1, filename=None, _data_release=None):
+        """
+        Downloads a trilogy image.
+
+        Parameters
+        ----------
+        ra : float
+            The RA of the center of the stamp.
+        dec : float
+            The DEC of the center of the stamp.
+        size : float
+            The size of the stamp in arcseconds.
+        R : str
+            Combinations of bands to use for the red channel.
+        G : str
+            Combinations of bands to use for the green channel.
+        B : str
+            Combinations of bands to use for the blue channel.
+        noiselum : float, optional
+            The noise luminosity. Defaults to 0.15.
+        satpercent : float, optional
+            The saturation percentage. Defaults to 0.15.
+        colorsatfac : int, optional
+            The saturation factor. Defaults to 2.
+        option : int, optional
+            The option to use for the match 1 -> first match, 2 -> second match.
+        filename : str, optional
+            The name of the file to save the FITS data to.
+        _data_release : str, optional
+            The data release to download the FITS file for.
+
+        Returns
+        -------
+        astropy.io.fits.HDUList
+            The FITS data for the requested field and band.
+        """
+        data = {
+            "ra": ra,
+            "dec": dec,
+            "size": size,
+            "reqOrder": f"{R}-{G}-{B}",
+            "noiselum": noiselum,
+            "satpercent": satpercent,
+            "colorsatfac": colorsatfac,
+            "option": str(option),
+            "dr": _data_release
+        }
+        res = self._make_request('POST', f"{self.SERVER_URL}/trilogy_image", json_=data)
+        
+        frame = open_image(res.content)
+        if filename:
+            save_image(res.content, filename=filename)
+        return frame
     
     
     ## query method (same from old API)
