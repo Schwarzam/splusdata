@@ -37,7 +37,8 @@ def save_fits(fits, filename):
     for ext in fits:
         # check if extension is compressed
         if isinstance(ext, CompImageHDU):
-            sufix = ".fz"
+            if not ".fz" in filename:
+                sufix = ".fz"
     
     fits.writeto(filename + sufix, overwrite=True)
     
@@ -84,9 +85,7 @@ class Core:
         Downloads a data file.
     """
 
-    SERVER_URL = "https://splus.cloud/api"
-
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, SERVER_IP = f"https://splus.cloud"):
         """
         Initializes a new instance of the Core class.
 
@@ -97,6 +96,9 @@ class Core:
         password : str, optional
             The password for the splus.cloud account. If not provided, the user will be prompted to enter it.
         """
+        self.SERVER_IP = SERVER_IP
+        self.SERVER_URL = f"{self.SERVER_IP}/api"
+        
         self.session = requests.Session()
         self.authenticate(username, password)
 
@@ -129,7 +131,7 @@ class Core:
 
         user_data = json.loads(response.content)
         self.token = user_data['token']
-        self.headers = {'Authorization': 'Token ' + self.token, "Content-Type": "application/json"}
+        self.headers = {'Authorization': 'Token ' + self.token}
 
         response = self.session.post(f"{self.SERVER_URL}/auth/collab", headers=self.headers)
         collab = json.loads(response.content)
@@ -344,7 +346,6 @@ class Core:
         }
         res = self._make_request('POST', f"{self.SERVER_URL}/download_stamp", json_=data)
         
-        
         frame = open_fits(res.content)
         if filename:
             save_fits(frame, filename=filename)
@@ -476,13 +477,13 @@ class Core:
             astropy.table.Table: result table.
         """        
         if self.collab:
-            baselink = "https://splus.cloud/tap/tap/async/"
+            baselink = f"{self.SERVER_IP}/tap/tap/async/"
         else:
-            baselink = "https://splus.cloud/public-TAP/tap/async/"
+            baselink = f"{self.SERVER_IP}/public-TAP/tap/async/"
 
 
         if publicdata and self.collab:
-            baselink = "https://splus.cloud/public-TAP/tap/async/"
+            baselink = f"{self.SERVER_IP}/public-TAP/tap/async/"
 
         data = {
             "request": 'doQuery',
@@ -492,7 +493,6 @@ class Core:
             "query": query,
             "format": 'fits'
         }
-        
         
         if str(type(table_upload)) != "<class 'NoneType'>":
             if 'astropy.table' in str(type(table_upload)):
@@ -568,7 +568,7 @@ class Core:
                 item = xmldoc.getElementsByTagName('result')[0]
                 link = item.attributes['xlink:href'].value
 
-                link = link.replace("http://192.168.10.23:8080", "https://splus.cloud").replace("http://10.180.0.209:8080", "https://splus.cloud").replace("http://10.180.0.207:8080", "https://splus.cloud").replace("http://10.180.0.219:8080", "https://splus.cloud")
+                link = link.replace("http://192.168.10.23:8080", f"{self.SERVER_IP}").replace("http://10.180.0.209:8080", f"{self.SERVER_IP}").replace("http://10.180.0.207:8080", f"{self.SERVER_IP}").replace("http://10.180.0.219:8080", f"{self.SERVER_IP}")
                 res = requests.get(link, headers=self.headers)
                 
                 self.lastres = 'query'
