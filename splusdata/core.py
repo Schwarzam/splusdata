@@ -234,7 +234,7 @@ class Core:
             The information about the requested field.
         """
         # 'api/get_field_info_mar/<str:fieldname>'
-        res = self._make_request('POST', f"{self.SERVER_URL}/get_field_info_mar/{field + 'd'}")
+        res = self._make_request('POST', f"{self.SERVER_URL}/get_field_info_mar/{field}")
         return res.json()
 
 
