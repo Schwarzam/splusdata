@@ -459,6 +459,48 @@ class Core:
             save_image(res.content, filename=filename)
         return frame
     
+    def stamp_detection(self, ra, dec, size, bands = "G, R, I, Z", return_weight = False, option = 1, filename=None, _data_release=None):
+            """
+            Sends a POST request to the S-PLUS server to retrieve a stamp detection image.
+
+            Args:
+                ra (float): Right ascension of the center of the stamp in degrees.
+                dec (float): Declination of the center of the stamp in degrees.
+                size (float): Size of the stamp in arcseconds.
+                bands (str, optional): Comma-separated list of bands to retrieve. Defaults to "G, R, I, Z".
+                return_weight (bool, optional): Whether to return the weight map along with the stamp image. Defaults to False. This option is only allowed with filename, because it saves a .zip
+                option (int, optional): Detection algorithm option. Defaults to 1.
+                filename (str, optional): If provided, saves the stamp image to the specified file path. Defaults to None.
+                _data_release (str, optional): Data release version. Defaults to None.
+
+            Raises:
+                SplusError: If return_weight is True but filename is None.
+
+            Returns:
+                astropy.io.fits: If filename is None, returns a fits.
+            """
+            
+            if return_weight and not filename:
+                raise SplusError("return_weight is True, but filename is None")
+            
+            data = {
+                "ra": ra,
+                "dec": dec,
+                "size": size,
+                "bands": str(bands).replace("[", "").replace("]", "").replace("'", "").replace(" ", ""),
+                "return_weight": return_weight,
+                "option": str(option),
+                "dr": _data_release
+            }
+            
+            res = self._make_request('POST', f"{self.SERVER_URL}/stamp_detection_image", json_=data)
+            
+            frame = open_fits(res.content)
+            if filename:
+                open(filename + ".zip", 'wb').write(res.content)
+                return 
+            return frame
+        
     
     ## query method (same from old API)
     def query(self, query, table_upload=None, publicdata=None):
