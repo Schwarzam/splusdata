@@ -101,6 +101,8 @@ class Core:
         
         self.session = requests.Session()
         self.authenticate(username, password)
+        
+        self.refresh_rate = 5
 
     def authenticate(self, username=None, password=None):
         """
@@ -604,7 +606,7 @@ class Core:
 
                 item = xmldoc.getElementsByTagName('phase')[0]
                 process = item.firstChild.data
-                time.sleep(5)
+                time.sleep(self.refresh_rate)
 
             if process == 'COMPLETED':
                 item = xmldoc.getElementsByTagName('result')[0]
