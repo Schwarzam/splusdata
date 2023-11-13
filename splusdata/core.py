@@ -320,7 +320,7 @@ class Core:
         dec : float
             The DEC of the center of the stamp.
         size : float
-            The size of the stamp in arcseconds.
+            The size of the stamp in pixels.
         band : str
             The name of the band to download the FITS file for.
         weight : bool, optional
@@ -364,7 +364,7 @@ class Core:
         dec : float
             The DEC of the center of the stamp.
         size : float
-            The size of the stamp in arcseconds.
+            The size of the stamp in pixels.
         R : str
             The name of the band to use for the red channel.
         G : str
@@ -418,7 +418,7 @@ class Core:
         dec : float
             The DEC of the center of the stamp.
         size : float
-            The size of the stamp in arcseconds.
+            The size of the stamp in pixels.
         R : str
             Combinations of bands to use for the red channel.
         G : str
@@ -468,7 +468,7 @@ class Core:
             Args:
                 ra (float): Right ascension of the center of the stamp in degrees.
                 dec (float): Declination of the center of the stamp in degrees.
-                size (float): Size of the stamp in arcseconds.
+                size (float): Size of the stamp in pixels.
                 bands (str, optional): Comma-separated list of bands to retrieve. Defaults to "G, R, I, Z".
                 return_weight (bool, optional): Whether to return the weight map along with the stamp image. Defaults to False. This option is only allowed with filename, because it saves a .zip
                 option (int, optional): Detection algorithm option. Defaults to 1.
