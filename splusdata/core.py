@@ -502,7 +502,24 @@ class Core:
                 open(filename + ".zip", 'wb').write(res.content)
                 return 
             return frame
-        
+    
+    def checkcoords(self, ra, dec):
+            """
+            Check if the given coordinates are within the survey area.
+
+            Args:
+                ra (float): The right ascension of the target in degrees.
+                dec (float): The declination of the target in degrees.
+
+            Returns:
+                dict: A dictionary containing the result of the request.
+            """
+            data = {
+                "ra": ra,
+                "dec": dec,
+            }
+            res = self._make_request('POST', f"{self.SERVER_URL}/check_near_field", json_=data)
+            return res.json()
     
     ## query method (same from old API)
     def query(self, query, table_upload=None, publicdata=None):
