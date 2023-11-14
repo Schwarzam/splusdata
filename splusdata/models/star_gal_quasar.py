@@ -2,9 +2,14 @@ import pickle
 import pandas as pd
 import numpy as np
 from astropy import units as u
-from astroquery.utils.tap.core import TapPlus
 from astropy.coordinates import SkyCoord
 import requests
+
+## It seems that astroquery is giving error when importing for Ubuntu 18.x
+try: from astroquery.utils.tap.core import TapPlus 
+except Exception as e:
+    import warnings
+    warnings.warn(str(e))
 
 __author__ = "Lilianne Nakazono"
 __version__ = "0.1.0"
