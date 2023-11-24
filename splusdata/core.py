@@ -126,7 +126,7 @@ class Core:
             password = getpass("splus.cloud password: ")
 
         data = {'username': username, 'password': password}
-        response = self.session.post(f"{self.SERVER_URL}/auth/login", data=data)
+        response = self.session.post(f"{self.SERVER_URL}/auth/login", data=data, timeout=10)
 
         if response.status_code != 200:
             raise AuthenticationError("Authentication failed")

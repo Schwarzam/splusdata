@@ -29,6 +29,8 @@ class connect:
             password (str, optional): splus.cloud pasword
         """        
 
+        print('API Deprecated! Please check the new one at splus.cloud/documentation/python.')
+        
         if not username or not password:
             username = input("splus.cloud username: ")
             password = getpass("splus.cloud password: ")
