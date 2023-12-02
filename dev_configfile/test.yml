@@ -1,10 +1,9 @@
-user:
-  name: 
-  password:
+user: vincas
+password: 123
 
 operation:
   file_path: 
-  type: []
+  type: [x1, x2]
   ra:
   dec:
   size:
