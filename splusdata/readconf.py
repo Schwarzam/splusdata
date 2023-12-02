@@ -18,23 +18,37 @@ operations = [
     #'query'
 ]
 
-def handle_operation_type(operation):
-    if isinstance(operation["type"], str):
-        ops = [operation["type"]]
+def handle_operation(operation : str, info):
+    if operation == 'stamp':
+        # conn.stamp(**info)
+        pass
+
+def handle_operation_type(operation_data):
+    if isinstance(operation_data["type"], str):
+        ops = [operation_data["type"]]
     for op in ops:
         if op not in operations:
             raise ValueError("Operation type not supported: {}".format(op))
-    if "file_path" in operation:
-        f = pd.read_csv(operation["file_path"])
+        
+    if "file_path" in operation_data:
+        df = pd.read_csv(operation_data["file_path"])
 
         if "ra" not in f.columns:
-            raise ValueError("File {} does not have column 'ra'".format(operation["file_path"]))
+            raise ValueError("File {} does not have column 'ra'".format(operation_data["file_path"]))
         if "dec" not in f.columns:
-            raise ValueError("File {} does not have column 'dec'".format(operation["file_path"]))
+            raise ValueError("File {} does not have column 'dec'".format(operation_data["file_path"]))
         
-        
-        
-    return ops
+        for key, value in df.iterrows():
+            info = operation_data
+            ## Add ra and dec to info
+            info["ra"] = value["ra"]
+            info["dec"] = value["dec"]
+            for op in ops:
+                handle_operation(info["type"], info)
+    
+    else:
+        for op in ops:
+            handle_operation(info["type"], info)
 
 
 def main():
