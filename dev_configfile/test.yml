@@ -1,0 +1,15 @@
+user:
+  name: 
+  password:
+
+operation:
+  file_path: 
+  type: []
+  ra:
+  dec:
+  size:
+  band:
+  R:
+  G:
+  B:
+
