@@ -1,0 +1,19 @@
+user: vincas
+password: 123
+
+
+
+operation:
+  type: [stamp, lupton_rgb, trilogy_image]
+
+  file_path: /Users/gustavo/Downloads/Fornax_not_in_dr3.csv
+
+
+  size: 200
+  band: R
+
+  stretch: 0.3
+
+  output_folder: /Users/gustavo/Downloads/testando
+
+
