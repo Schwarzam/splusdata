@@ -82,22 +82,31 @@ def handle_operation(operation : str, info, conn):
     elif operation == 'query':
         if "query" not in info:
             raise ValueError("Query not specified")
-        if "upload_file" in info:
-            if not os.path.exists(info["upload_file"]):
-                raise ValueError("File {} does not exist".format(info["upload_file"]))
-            info["query"] = open(info["upload_file"], "r").read()
+        
+        filename = os.path.join(output_folder, "query.fits")
+
+        if "upload_table" in info:
+            if not os.path.exists(info["upload_table"]):
+                raise ValueError("File {} does not exist".format(info["upload_table"]))
+            
+            try:
+                file = pd.read_csv(info["upload_table"])
+                info = filter_info(info, conn.query)
+                data = conn.query(table_upload=file,  **info )
+                data.write(filename, overwrite=True)
+            except Exception as e:
+                print(e)
+
         else:
-            filename = os.path.join(output_folder, "query.fits")
+            
             info = filter_info(info, conn.query)
             try:
                 data = conn.query( **info )
                 data.write(filename, overwrite=True)
             except Exception as e:
                 print(e)
+
             
-
-
-    
 
 def get_coordinates_col(df : pd.DataFrame):
     ra = None
