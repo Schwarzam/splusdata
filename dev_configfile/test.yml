@@ -1,19 +1,14 @@
-user: vincas
-password: 123
-
+user: Vincas
+password: Simagivi@123
 
 
 operation:
-  type: [stamp, lupton_rgb, trilogy_image]
+  type: [query]
+  
+  query: SELECT det.ID, det.ra, det.dec, det.g_auto, det.r_auto, det.i_auto, sqg.PROB_GAL FROM dr3.all_dr3 as det JOIN dr3.vac_star_galaxy_quasar as sqg on (sqg.ID = det.ID) WHERE 1 = CONTAINS( POINT('ICRS', det.ra, det.dec), CIRCLE('ICRS', 0.5, 0.5, 1) ) AND sqg.PROB_GAL >= 0.9
 
-  file_path: /Users/gustavo/Downloads/Fornax_not_in_dr3.csv
+  upload_table: 
 
-
-  size: 200
-  band: R
-
-  stretch: 0.3
-
-  output_folder: /Users/gustavo/Downloads/testando
+  output_folder: C:\Users\018320631\Desktop\Ubatuba\teste
 
 
