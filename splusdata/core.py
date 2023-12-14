@@ -634,7 +634,6 @@ class Core:
                 
                 self.lastres = 'query'
                 self.lastcontent = Table.read(io.BytesIO(res.content))
-                print('finished')
                 
                 return self.lastcontent
 
