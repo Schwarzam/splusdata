@@ -85,24 +85,37 @@ class Core:
         Downloads a data file.
     """
 
-    def __init__(self, username=None, password=None, SERVER_IP = f"https://splus.cloud"):
+    def __init__(self, username=None, password=None, SERVER_IP = f"https://splus.cloud", auto_renew = False):
         """
         Initializes a new instance of the Core class.
 
         Parameters
         ----------
-        username : str, optional
+        username   : str, optional
             The username for the splus.cloud account. If not provided, the user will be prompted to enter it.
-        password : str, optional
+        password   : str, optional
             The password for the splus.cloud account. If not provided, the user will be prompted to enter it.
+        SERVER_IP  : str, optional
+            Server IP 
+        auto_renew : bool, optional
+            Automatically try to renew splus token once is expired instead of loggin in again. (not so safe)
+        
         """
         self.SERVER_IP = SERVER_IP
         self.SERVER_URL = f"{self.SERVER_IP}/api"
         
-        self.session = requests.Session()
-        self.authenticate(username, password)
+        self.auto_renew = auto_renew
         
+        self.session = requests.Session()
+        
+        self.username = username
+        self.password = None
+        if self.auto_renew:
+            self.password = password
+            
+        self.authenticate(self.username, password)
         self.refresh_rate = 5
+
 
     def authenticate(self, username=None, password=None):
         """
@@ -124,6 +137,8 @@ class Core:
             username = input("splus.cloud username: ")
         if not password:    
             password = getpass("splus.cloud password: ")
+            if self.auto_renew:
+                self.password = password
 
         data = {'username': username, 'password': password}
         response = self.session.post(f"{self.SERVER_URL}/auth/login", data=data)
@@ -169,6 +184,11 @@ class Core:
         """
         response = self.session.request(method, url, data=data, json=json_, params=params, headers=self.headers)
         
+        if self.auto_renew and response.status_code == 401:
+            print("Renewing splus session token.")
+            self.authenticate(self.username, self.password)
+            response = self.session.request(method, url, data=data, json=json_, params=params, headers=self.headers)
+
         resjson = None
         try:
             resjson = response.json()
