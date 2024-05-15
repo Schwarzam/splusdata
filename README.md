@@ -17,7 +17,7 @@ or:
 <br>
 Check some more detailed docs in the link below:
 
-[DOCS](https://schwarzam.github.io/splusdata/splusdata/)
+[DOCS](https://splus.cloud/documentation)
 
 <br>
 There is a quick demo showing the functionalities of the package at this notebook below
