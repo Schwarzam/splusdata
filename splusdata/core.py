@@ -187,7 +187,7 @@ class Core:
         if self.auto_renew and response.status_code == 401:
             print("Renewing splus session token.")
             self.authenticate(self.username, self.password)
-            response = self.session.request(method, url, data=data, json=json_, params=params, headers=self.headers)
+            response = self.session.request(method, url, data=data, json=json_, params=params, stream=True, headers=self.headers)
 
         resjson = None
         try:
