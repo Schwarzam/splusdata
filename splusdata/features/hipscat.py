@@ -43,10 +43,17 @@ def _get_hips_n_margin_links(pattern, dirs_schema, starting_path = "/"):
             res += _get_hips_n_margin_links(pattern, dirs_schema[key], starting_path = os.path.join(starting_path, key))
     return res
 
-def get_hipscats(pattern=None, SERVER_IP = f"https://splus.cloud", HIPS_IP = f"https://splus.cloud/HIPS/catalogs"):
+def get_hipscats(pattern=None, headers=None, SERVER_IP = f"https://splus.cloud"):
     link = "/api/get_hipscat_available"
     
-    res = requests.get(SERVER_IP + link)
+    if headers is None:
+        res = requests.get(SERVER_IP + link)
+        HIPS_IP = f"{SERVER_IP}/HIPS/catalogs"
+    else:
+        res = requests.get(SERVER_IP + link, headers=headers)
+        HIPS_IP = f"{SERVER_IP}/internalhips/catalogs"
+        
+        
     if res.status_code != 200:
         raise ValueError(f"Error: {res.status_code}")
     
@@ -56,6 +63,6 @@ def get_hipscats(pattern=None, SERVER_IP = f"https://splus.cloud", HIPS_IP = f"h
         data = res
     
         for i in range(len(data)):
-            data[i] = [HIPS_IP + data[i][0], HIPS_IP + data[i][1]]
+            data[i] = [HIPS_IP + data[i][0] + "/", HIPS_IP + data[i][1] + "/"]
         
     return data
