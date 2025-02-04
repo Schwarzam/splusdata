@@ -40,3 +40,18 @@ Whether it's a new data visualization tool, an improved database search algorith
 So, if you have an idea or suggestion for a new feature or functionality, we encourage you to share it with us. We welcome any and all contributions and suggestions, and we look forward to working with you to make splusdata the best it can be.
 
 Any doubts, sugestions or problems about this tool please write to gustavo.b.schwarz@gmail.com
+
+Cite:
+
+```
+@software{oliveira_schwarz_2022_10980447,
+  author       = {Oliveira Schwarz, G. B.},
+  title        = {Southern Photometric Local Universe Survey Cloud},
+  month        = jan,
+  year         = 2022,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.10980447},
+  url          = {https://doi.org/10.5281/zenodo.10980447},
+}
+```
+
