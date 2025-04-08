@@ -28,19 +28,19 @@ def _get_hips_n_margin_links(pattern, dirs_schema, starting_path = "/"):
                 continue
             
             for match in match_res:
-                local_res = [os.path.join(starting_path, match), None]
+                local_res = [str(starting_path) + "/" + str(match), None]
             
                 if "margins" in dirs_schema:
                     for margin in dirs_schema["margins"]:
                         if margin.startswith(match):
-                            margin = os.path.join(starting_path, margin)
+                            margin = str(starting_path) + "/" + str(match)
                             local_res[1] = margin
                             break
                 
                 res.append(local_res)
             
         elif key != "margins":
-            res += _get_hips_n_margin_links(pattern, dirs_schema[key], starting_path = os.path.join(starting_path, key))
+            res += _get_hips_n_margin_links(pattern, dirs_schema[key], starting_path = str(starting_path) + "/" + str(key))
     return res
 
 def get_hipscats(pattern=None, headers=None, SERVER_IP = f"https://splus.cloud"):
