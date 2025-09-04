@@ -1,18 +1,23 @@
-import sys
+import warnings
 import numpy as np
+from os import makedirs
 import astropy.units as u
 from tqdm.auto import tqdm
 from astropy.io import fits
 from astropy.wcs import WCS
-from os import makedirs, getcwd
 from astropy.table import Table
 from splusdata.core import Core
 import astropy.constants as const
-from os.path import join, exists, isfile
+from os.path import join, exists
+from astropy.wcs import FITSFixedWarning
+from astropy.io.fits.verify import VerifyWarning
 
 from splusdata.scubes.read import read_scube
 from splusdata.vars import BANDS, BANDWAVEINFO, get_band_info
 from splusdata.features.io import print_level, convert_coord_to_degrees
+
+__scubes_author__ = 'Eduardo A. D. Lacerda <dhubax@gmail.com>'
+__scubes_version__ = '0.1.idr6-beta'
 
 def _getval_array(pathlist, key, ext):
     return np.array([fits.getval(img, key, ext) for img in pathlist])
@@ -40,6 +45,13 @@ class SCubes:
         self.conn = Core(username, password, verbose=verbose)
         self.field = field
         self.verbose = verbose
+        self.mem = False
+
+        if verbose == 0:
+            # dactivate warnings without verbosity
+            warnings.simplefilter('ignore', category=VerifyWarning)
+            warnings.simplefilter('ignore', category=FITSFixedWarning)
+
         self.cubepath = None
         self._stamp_config(ra, dec, size)
 
@@ -47,14 +59,14 @@ class SCubes:
         self.ra, self.dec = convert_coord_to_degrees(ra, dec)
         self.size = size
 
-    def _getval(self, obj, key, ext, mem=False):
-        return _getval_array_mem(obj, key, ext) if mem else _getval_array(obj, key, ext)
+    def _getval(self, obj, key, ext):
+        return _getval_array_mem(obj, key, ext) if self.mem else _getval_array(obj, key, ext)
 
-    def _getdata(self, obj, ext, mem=False):
-        return _getdata_array_mem(obj, ext) if mem else _getdata_array(obj, ext)
+    def _getdata(self, obj, ext):
+        return _getdata_array_mem(obj, ext) if self.mem else _getdata_array(obj, ext)
 
-    def _getheader(self, obj, ext, mem=False):
-        return _getheader_array_mem(obj, ext) if mem else _getheader_array(obj, ext)
+    def _getheader(self, obj, ext):
+        return _getheader_array_mem(obj, ext) if self.mem else _getheader_array(obj, ext)
 
     def _download_calibrated_stamps(self, objname, outpath=None, force=False):
         images = []
@@ -63,23 +75,23 @@ class SCubes:
         for b in tqdm(BANDS, desc=f'{objname} @ {self.field} - Downloading', leave=True, position=0):
             b = b.upper().replace('J0', 'F')
             kw_args = _kw_args.copy()
-            kw_args.update(band=b, weight=False)            
-            if outpath is not None:
+            kw_args.update(band=b, weight=False)          
+            if self.mem:
+                x = self.conn.calibrated_stamp(**kw_args)
+                images.append(x)
+            else:
                 filename = f'{objname}_{self.field}_{b}_{self.size}x{self.size}_swp.fits.fz'
                 kw_args.update(outfile=join(outpath, filename))
                 _ = self.conn.calibrated_stamp(**kw_args)
                 images.append(kw_args['outfile'])
-            else:
-                x = self.conn.calibrated_stamp(**kw_args)
-                images.append(x)
             # wei
             kw_args['weight'] = True
-            if outpath is not None:
-                kw_args['outfile'] = join(outpath, filename.replace('swp', 'swpweight'))
-                _ = self.conn.stamp(**kw_args)
-                wimages.append(kw_args['outfile'])
+            if self.mem:
+                wimages.append(self.conn.calibrated_stamp(**kw_args))
             else:
-                wimages.append(self.conn.stamp(**kw_args))
+                kw_args['outfile'] = join(outpath, filename.replace('swp', 'swpweight'))
+                _ = self.conn.calibrated_stamp(**kw_args)
+                wimages.append(kw_args['outfile'])
         self.images = images
         self.wimages = wimages
 
@@ -94,20 +106,18 @@ class SCubes:
         self.flam_unit = u.erg / u.s / u.cm / u.cm / u.AA
         self.fnu_unit = u.erg / u.s / u.cm / u.cm / u.Hz
 
-        mem = True if self.cubepath is None else False
-
         # flux
-        calib_data__byx = self._getdata(self.images, ext, mem=mem)
+        calib_data__byx = self._getdata(self.images, ext)
         fnu__byx = calib_data__byx*Jy2fnu*self.fnu_unit
         flam__byx = scale*(fnu__byx*_c/self.wl__b[:, None, None]**2).to(self.flam_unit)
 
         # error in flux
-        zp_factor__byx = self._getdata(self.images, 2, mem=mem)
+        zp_factor__byx = self._getdata(self.images, 2)
         absdata__byx = np.abs(calib_data__byx/zp_factor__byx)
-        gain__b = self._getval(self.images, 'GAIN', ext, mem=mem)
+        gain__b = self._getval(self.images, 'GAIN', ext)
         gain__byx = gain__b[:, None, None]
-        weidata__byx = self._getdata(self.wimages, ext, mem=mem)
-        absweidata__byx = np.abs(self._getdata(self.wimages, ext, mem=mem))
+        weidata__byx = self._getdata(self.wimages, ext)
+        absweidata__byx = np.abs(self._getdata(self.wimages, ext))
         dataerr__byx = np.sqrt(1/absweidata__byx + absdata__byx/gain__byx)
         f0__byx = zp_factor__byx*Jy2fnu
         efnu__byx = dataerr__byx*f0__byx*self.fnu_unit
@@ -156,22 +166,21 @@ class SCubes:
     def _metadata_hdu(self, ext=1):
         # METADATA HDU
         tab = [BANDS]
-        names = ['filter', 'central_wave', 'pivot_wave', 'PSFFWHM']
-        for item in names[1:-1]:
-            tab.append(_get_band_info_array(item))      
+        tab.append(_get_band_info_array('central_wave'))
+        tab.append(_get_band_info_array('pivot_wave'))
+        # PSFFWHM
         psffwhm__b = []
         for img in self.images:
-            if self.cubepath is not None:
-                hdr = fits.getheader(img, ext=ext)
-            else:
+            if self.mem:
                 hdr = img[ext].header
+            else:
+                hdr = fits.getheader(img, ext=ext)
             key = [k for k in hdr.keys() if 'FWHMMEAN' in k]
             if len(key) == 1:
                 psffwhm__b.append(hdr.get(key[0]))
-        tab.append(psffwhm__b)       
-        meta_hdu = fits.BinTableHDU(Table(tab, names=names))
-        meta_hdu.header['EXTNAME'] = 'METADATA'
-        return meta_hdu
+        tab.append(psffwhm__b)
+        tab = Table(tab, names=['FILTER', 'CENTWAVE', 'PIVOTWAVE', 'PSFFWHM'])
+        return fits.BinTableHDU(tab, name='METADATA')
 
     def _create_cube_hdulist(self, objname, ext=1):
         cube_prim_hdu = fits.PrimaryHDU()
@@ -180,7 +189,7 @@ class SCubes:
         cube_prim_hdu.header['SIZE'] = (self.size, 'Side of the stamp in pixels')
         cube_prim_hdu.header['RA'] = self.ra
         cube_prim_hdu.header['DEC'] = self.dec
-        hdr = self.images[0][ext].header if self.cubepath is None else fits.getheader(self.images[0], ext=ext)
+        hdr = self.images[0][ext].header if self.mem else fits.getheader(self.images[0], ext=ext)
         cube_prim_hdu.header.update(self._stamp_WCS_to_cube_header(hdr))
         for key in ['X0TILE', 'X01TILE', 'Y0TILE', 'Y01TILE']:
             cube_prim_hdu.header[key] = hdr.get(key)
@@ -205,11 +214,12 @@ class SCubes:
         self.cube.writeto(cubepath, overwrite=overwrite)
         print_level(f'Cube successfully created!', 1, self.verbose)    
 
-    def create_cube(self, flam_scale=None, objname=None, outpath=None, force=False, data_ext=1, write_fits=False, return_scube=False):
+    def create_cube(self, flam_scale=None, objname=None, outpath=None, force=False, data_ext=1, write_fits=False, return_scube=False, force_mem=False):
         self.flam_scale = 1e-19 if flam_scale is None else flam_scale
         self.objname = 'myobj' if objname is None else objname
         self.outpath = '.' if outpath is None else outpath
-
+        mkcube = True
+        
         if outpath is not None:
             try: 
                 makedirs(self.outpath)
@@ -219,15 +229,22 @@ class SCubes:
             self.cubepath = join(self.outpath, f'{self.objname}_cube.fits')
 
             if exists(self.cubepath) and not force:
-                raise OSError('SCube exists!')
-
-        self._download_calibrated_stamps(objname, outpath, force=force)
-        self._photospectra(flam_scale, ext=data_ext)
-
-        self.cube = self._create_cube_hdulist(objname, ext=data_ext)
-
-        if (self.cubepath is not None) and write_fits:
-            self.write(self.cubepath, force)
+                mkcube = False
+                print_level(f'{self.cubepath}: cube already exists', 1, self.verbose)
+        else:
+            self.mem = True
         
-        if return_scube:
-            return read_scube(self.cube)
+        if not self.mem and force_mem:
+            self.mem = True
+
+        if mkcube:
+            self._download_calibrated_stamps(objname, outpath, force=force)
+            self._photospectra(flam_scale, ext=data_ext)
+
+            self.cube = self._create_cube_hdulist(objname, ext=data_ext)
+
+            if (self.cubepath is not None) and write_fits:
+                self.write(self.cubepath, force)
+            
+            if return_scube:
+                return read_scube(self.cube)
