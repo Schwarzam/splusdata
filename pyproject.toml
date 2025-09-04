@@ -32,7 +32,8 @@ dependencies = [
 
 [project.scripts]
 splusdata = "splusdata.readconf:main"
-scubes_dr6 = "splusdata.scubes.scripts:scubes"
+spd_scubes = "splusdata.scubes.scripts:scubes"
+spd_scubesml = "splusdata.scubes.scripts:scubesml"
 
 [tool.setuptools.packages.find]
 where = ["."]
