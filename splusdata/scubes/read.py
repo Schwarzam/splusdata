@@ -393,16 +393,16 @@ class read_scube:
     
     @property
     def filters(self):
-        return self.metadata['filter'].tolist()
+        return self.metadata['FILTER'].tolist()
 
     @property
     def central_wave(self):
-        return self.metadata['central_wave']
+        return self.metadata['CENTRALWAVE']
 
     @property
     def pivot_wave(self):
-        return self.metadata['pivot_wave']
-    
+        return self.metadata['PIVOTWAVE']
+
     @property
     def psf_fwhm(self):
         return self.metadata['PSFFWHM']
