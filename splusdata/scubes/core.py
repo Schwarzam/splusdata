@@ -68,7 +68,7 @@ class SCubes:
     def _getheader(self, obj, ext):
         return _getheader_array_mem(obj, ext) if self.mem else _getheader_array(obj, ext)
 
-    def _download_calibrated_stamps(self, objname, outpath=None, force=False):
+    def _download_calibrated_stamps(self, objname, force=False):
         images = []
         wimages = []
         _kw_args = dict(ra=self.ra, dec=self.dec, size=self.size, field_name=self.field)
@@ -81,7 +81,7 @@ class SCubes:
                 images.append(x)
             else:
                 filename = f'{objname}_{self.field}_{b}_{self.size}x{self.size}_swp.fits.fz'
-                kw_args.update(outfile=join(outpath, filename))
+                kw_args.update(outfile=join(self.outpath, filename))
                 _ = self.conn.calibrated_stamp(**kw_args)
                 images.append(kw_args['outfile'])
             # wei
@@ -89,7 +89,7 @@ class SCubes:
             if self.mem:
                 wimages.append(self.conn.calibrated_stamp(**kw_args))
             else:
-                kw_args['outfile'] = join(outpath, filename.replace('swp', 'swpweight'))
+                kw_args['outfile'] = join(self.outpath, filename.replace('swp', 'swpweight'))
                 _ = self.conn.calibrated_stamp(**kw_args)
                 wimages.append(kw_args['outfile'])
         self.images = images
@@ -182,7 +182,7 @@ class SCubes:
         tab = Table(tab, names=['FILTER', 'CENTWAVE', 'PIVOTWAVE', 'PSFFWHM'])
         return fits.BinTableHDU(tab, name='METADATA')
 
-    def _create_cube_hdulist(self, objname, ext=1):
+    def _create_cube_hdulist(self, objname, ext=1, overwrite=False):
         cube_prim_hdu = fits.PrimaryHDU()
         cube_prim_hdu.header['TILE'] = self.field
         cube_prim_hdu.header['OBJECT'] = objname
@@ -207,44 +207,38 @@ class SCubes:
             hdu.header['BUNIT'] = (f'{self.flam_unit}', 'Physical units of the array values')
         hdul.append(self._weights_mask_hdu())
         hdul.append(self._metadata_hdu(ext))
-        return fits.HDUList(hdul)
-
-    def write(self, cubepath, overwrite=False):
-        print_level(f'writting cube {cubepath}', 1, self.verbose)
-        self.cube.writeto(cubepath, overwrite=overwrite)
+        print_level(f'writting cube {self.cubepath}', 1, self.verbose)
+        fits.HDUList(hdul).writeto(self.cubepath, overwrite=overwrite)
         print_level(f'Cube successfully created!', 1, self.verbose)    
+        return fits.open(self.cubepath)
 
-    def create_cube(self, flam_scale=None, objname=None, outpath=None, force=False, data_ext=1, write_fits=False, return_scube=False, force_mem=False):
+    def create_cube(self, flam_scale=None, objname=None, outpath=None, force=False, data_ext=1, return_scube=False, force_mem=False):
         self.flam_scale = 1e-19 if flam_scale is None else flam_scale
         self.objname = 'myobj' if objname is None else objname
         self.outpath = '.' if outpath is None else outpath
         mkcube = True
         
-        if outpath is not None:
-            try: 
-                makedirs(self.outpath)
-            except FileExistsError:
-                print_level(f'{self.outpath}: directory already exists', 1, self.verbose)    
+        try: 
+            makedirs(self.outpath)
+        except FileExistsError:
+            print_level(f'{self.outpath}: directory already exists', 1, self.verbose)    
 
-            self.cubepath = join(self.outpath, f'{self.objname}_cube.fits')
+        self.cubepath = join(self.outpath, f'{self.objname}_cube.fits')
 
-            if exists(self.cubepath) and not force:
-                mkcube = False
-                print_level(f'{self.cubepath}: cube already exists', 1, self.verbose)
-        else:
-            self.mem = True
-        
+        if exists(self.cubepath) and not force:
+            mkcube = False
+            print_level(f'{self.cubepath}: cube already exists', 1, self.verbose)
+       
         if not self.mem and force_mem:
             self.mem = True
-
+        
+        cube = None
         if mkcube:
-            self._download_calibrated_stamps(objname, outpath, force=force)
+            self._download_calibrated_stamps(objname, force=force)
             self._photospectra(flam_scale, ext=data_ext)
 
-            self.cube = self._create_cube_hdulist(objname, ext=data_ext)
+            cube = self._create_cube_hdulist(objname, ext=data_ext, overwrite=force)
 
-            if (self.cubepath is not None) and write_fits:
-                self.write(self.cubepath, force)
-            
             if return_scube:
-                return read_scube(self.cube)
+                return read_scube(cube)
+        return cube
