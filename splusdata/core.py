@@ -647,18 +647,16 @@ class Core:
         """
         stamp = self.stamp(ra, dec, size, band, weight=weight, field_name=field_name, size_unit=size_unit, data_release=data_release)
         
-        if weight:
-            return stamp
-        
-        from splusdata.features.zeropoints.zp_image import calibrate_hdu_with_zpmodel
-        zp_model = self.get_zp_file(stamp[1].header["FIELD"], stamp[1].header["FILTER"], data_release=data_release)
-        
-        calibrated_hdu, factor_map = calibrate_hdu_with_zpmodel(
-            stamp[1], zp_model, in_place=False, return_factor=True
-        )
+        if not weight:           
+            from splusdata.features.zeropoints.zp_image import calibrate_hdu_with_zpmodel
+            zp_model = self.get_zp_file(stamp[1].header["FIELD"], stamp[1].header["FILTER"], data_release=data_release)
+            
+            calibrated_hdu, factor_map = calibrate_hdu_with_zpmodel(
+                stamp[1], zp_model, in_place=False, return_factor=True
+            )
 
-        stamp[1] = calibrated_hdu
-        stamp.append(fits.ImageHDU(factor_map, name="ZP_FACTOR"))
+            stamp[1] = calibrated_hdu
+            stamp.append(fits.ImageHDU(factor_map, name="ZP_FACTOR"))
         
         if outfile:
             stamp.writeto(outfile, overwrite=True)
