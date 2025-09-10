@@ -445,11 +445,11 @@ class read_scube:
 
     @property 
     def flux__byx(self):
-        return self._hdulist['DATA'].data*self._hdulist['DATA'].header['BSCALE']
+        return self._hdulist['DATA'].data
 
     @property 
     def eflux__byx(self):
-        return self._hdulist['ERRORS'].data*self._hdulist['DATA'].header['BSCALE']
+        return self._hdulist['ERRORS'].data
     
     @property
     def n_x(self):
