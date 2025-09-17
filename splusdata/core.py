@@ -489,7 +489,7 @@ class Core:
 
         return Image.open(io.BytesIO(stamp_bytes))
     
-    def query(self, query, table_upload=None, table_name=None):
+    def query(self, query, table_upload=None, table_name=None, verbose = False):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -531,7 +531,8 @@ class Core:
         response = self.client.query_and_wait(
             query_text=query,
             table_name=table_name,
-            file=table_upload_bytes
+            file=table_upload_bytes, 
+            verbose=verbose
         )
         return response.data
 
