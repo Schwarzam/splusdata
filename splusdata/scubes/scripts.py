@@ -115,8 +115,7 @@ def scubes_argparse(args):
         Command-line arguments parsed.
     '''
     # closest even
-    tmp_size = round(args.size_multiplicator*float(args.size)/2)*2
-    args.size = max(tmp_size, args.min_size)
+    args.size = round(float(args.size)/2)*2
 
     return args
 
@@ -147,9 +146,7 @@ def scubes():
     ).create_cube(
         objname=args.object, 
         outpath=join(args.workdir, args.object), 
-        force=args.force, 
-        data_ext=1, write_fits=True, return_scube=False, 
-        force_mem=args.force_mem
+        force=args.force, force_mem=args.force_mem
     )
 
 SCUBESML_PROG_DESC = f'''
@@ -238,10 +235,7 @@ def scubesml():
             username=args.username, password=args.password, verbose=args.verbose
         )
         #try:
-        creator.create_cube(
-            objname=sname, outpath=args.workdir, force=args.force, 
-            write_fits=True, force_mem=args.force_mem
-        )
+        creator.create_cube(objname=sname, outpath=args.workdir, force=args.force, force_mem=args.force_mem)
         if creator.cubepath is not None:
             ml2header_updheader(creator.cubepath, args.ml)
         #except Exception as e:
