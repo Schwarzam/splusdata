@@ -195,7 +195,7 @@ class Core:
         Returns
         -------
         dict
-            A file entry suitable for `download_image()`, containing at least
+            A file entry suitable for `download_file()`, containing at least
             `id`, `filename`, and `file_type`.
 
         Selection Logic
@@ -284,7 +284,7 @@ class Core:
             pattern = ""
 
         final_candidate = self.get_file_metadata(field, band, pattern, data_release)
-        image_bytes = self.client.download_image(
+        image_bytes = self.client.download_file(
             final_candidate['id'],
             output_path=outfile
         )
@@ -573,7 +573,7 @@ class Core:
         file = files[0]
         
         print_level(f"Downloading zp_model {file['filename']}", 1, self.verbose)
-        json_bytes = self.client.download_image(file["id"])
+        json_bytes = self.client.download_file(file["id"])
         json_data = json.loads(json_bytes)
         return json_data
     
