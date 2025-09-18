@@ -134,9 +134,9 @@ class Core:
         Side Effects
         ------------
         Populates `self.collections` with a list of collection dicts, as returned by
-        `ADSSClient.get_image_collections()`.
+        `ADSSClient.get_collections()`.
         """
-        collections = self.client.get_image_collections()
+        collections = self.client.get_collections()
         self.collections = collections
 
     def check_available_images_releases(self):
@@ -147,7 +147,7 @@ class Core:
         list[str]
             Collection names, e.g., ["dr4", "dr5", "dr6", ...].
         """
-        collections = self.client.get_image_collections()
+        collections = self.client.get_collections()
         names = [col['name'] for col in collections]
         return names
 
@@ -200,7 +200,7 @@ class Core:
 
         Selection Logic
         ---------------
-        1. Lists candidates via `list_image_files(collection_id, filter_str=field, filter_name=band)`.
+        1. Lists candidates via `list_files(collection_id, filter_str=field, filter_name=band)`.
         2. If none, swaps '-' and '_' in `field` and retries once.
         3. Reads the collection's `patterns[pattern]`, splits by commas, and filters:
            - Tokens starting with '!' mean "exclude those containing token".
@@ -217,11 +217,11 @@ class Core:
         collection = self.get_collection_id_by_pattern(data_release)
         collection_id = collection['id']
         
-        candidates = self.client.list_image_files(collection_id, filter_str=field, filter_name=band)
+        candidates = self.client.list_files(collection_id, filter_str=field, filter_name=band)
         
         if len(candidates) == 0 and ("-" in field or "_" in field):
             field = field.replace("-", "_") if "-" in field else field.replace("_", "-")
-            candidates = self.client.list_image_files(collection_id, filter_str=field, filter_name=band)
+            candidates = self.client.list_files(collection_id, filter_str=field, filter_name=band)
         if len(candidates) == 0:
             raise SplusdataError(f"Field {field} not found in band {band}")
         
@@ -564,7 +564,7 @@ class Core:
         collection = self.get_collection_id_by_pattern(data_release)
         collection_id = collection['id']
         
-        files = self.client.list_image_files(
+        files = self.client.list_files(
             collection_id, 
             filter_str=f"{field}_{band}_zp", 
         )
