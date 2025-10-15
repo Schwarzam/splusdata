@@ -5,6 +5,7 @@ from PIL import Image
 from astropy.io import fits
 import astropy.units as u
 import io
+import os
 
 from splusdata.features.io import print_level
 from splusdata.features.find_pointings import find_pointing
@@ -119,7 +120,7 @@ class Core:
         self.client = adss.ADSSClient(
             SERVER_IP,
             username=username,
-            password=password
+            password=password,
         )
         self.collections = []
         self.verbose = verbose
@@ -252,7 +253,7 @@ class Core:
 
         return final_candidate
 
-    def field_frame(self, field, band, weight=False, outfile=None, data_release="dr4"):
+    def field_frame(self, field, band, weight=False, outfile=None, data_release="dr4", timeout = 60):
         """Download and open a full field FITS image.
 
         Parameters
@@ -286,12 +287,13 @@ class Core:
         final_candidate = self.get_file_metadata(field, band, pattern, data_release)
         image_bytes = self.client.download_file(
             final_candidate['id'],
-            output_path=outfile
+            output_path=outfile,
+            timeout=timeout
         )
         
         return fits.open(io.BytesIO(image_bytes))
                                    
-    def stamp(self, ra, dec, size, band, weight=False, field_name=None, size_unit="pixels", outfile=None, data_release="dr4"):
+    def stamp(self, ra, dec, size, band, weight=False, field_name=None, size_unit="pixels", outfile=None, data_release="dr4", timeout = 60):
         """Create and open a FITS stamp (cutout) by coordinates or by object name.
 
         Parameters
@@ -340,7 +342,8 @@ class Core:
                 size=size,
                 size_unit=size_unit,
                 pattern=weight if weight else "",
-                output_path=outfile
+                output_path=outfile,
+                timeout=timeout
             )
         else:
             stamp_bytes = self.client.stamp_images.create_stamp_by_object(
@@ -352,7 +355,8 @@ class Core:
                 size=size,
                 size_unit=size_unit,
                 pattern=weight if weight else "",
-                output_path=outfile
+                output_path=outfile,
+                timeout=timeout
             )
             
         return fits.open(io.BytesIO(stamp_bytes))
@@ -489,7 +493,7 @@ class Core:
 
         return Image.open(io.BytesIO(stamp_bytes))
     
-    def query(self, query, table_upload=None, table_name=None, verbose = False):
+    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 320):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -500,6 +504,8 @@ class Core:
             In-memory table to upload as a temporary (CSV) file for the query.
         table_name : str, optional
             Name to assign to the uploaded table on the server.
+        timeout : int, optional
+            Timeout in seconds for the query download time (default 320s). (the execution time is still limited by the server config, usually 2h)
 
         Returns
         -------
@@ -532,7 +538,8 @@ class Core:
             query_text=query,
             table_name=table_name,
             file=table_upload_bytes, 
-            verbose=verbose
+            verbose=verbose,
+            timeout = 320
         )
         return response.data
 
@@ -573,7 +580,7 @@ class Core:
         file = files[0]
         
         print_level(f"Downloading zp_model {file['filename']}", 1, self.verbose)
-        json_bytes = self.client.download_file(file["id"])
+        json_bytes = self.client.download_file(file["id"], timeout = 20)
         json_data = json.loads(json_bytes)
         return json_data
     
@@ -685,3 +692,35 @@ class Core:
             Propagates any errors from `find_pointing`.
         """
         return find_pointing(ra, dec, radius=radius)
+    
+    def download_collection(self, collection, outfolder="."):
+        if isinstance(collection, str):
+            collection = self.get_collection_id_by_pattern(collection)
+        elif isinstance(collection, int):
+            collection = {'id': collection}
+
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+            
+        not_over = True
+        skip = 0
+        while not_over:
+            files = self.client.list_files(
+                collection_id=collection['id'],
+                skip=skip,
+                limit=200
+            )
+            if len(files) == 0:
+                not_over = False
+            for f in files:
+                print(f"Downloading {f['filename']}")
+                try:
+                    if not os.path.exists(os.path.join(outfolder, f['filename'])):
+                        self.client.download_file(file_id=f['id'], output_path=os.path.join(outfolder, f['filename']), timeout=60)
+                    else:
+                        print(f"File {f['filename']} already exists, skipping download.")
+                except Exception as e:
+                    # delete partial file if exists
+                    if os.path.exists(os.path.join(outfolder, f['filename'])):
+                        os.remove(os.path.join(outfolder, f['filename']))
+                    print(f"Error downloading {f['filename']}: {e}")
