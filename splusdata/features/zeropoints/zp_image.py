@@ -3,6 +3,9 @@ from astropy.wcs import WCS
 from scipy.interpolate import RegularGridInterpolator
 import datetime
 
+import pandas as pd
+from astropy.table import Table
+
 from splusdata.features.zeropoints.zp_map import _reconstruct_centers_from_model as _reconstruct_centers
 # ---------- helpers: robust interpolator from model (dict) ----------
 
@@ -129,3 +132,60 @@ def calibrate_hdu_with_zpmodel(hdu, model_dict, *, in_place=False, return_factor
         new_hdu.header['ZPCDATE'] = datetime.datetime.now().isoformat()
         new_hdu.header['ZPCMED']  = global_median
         return (new_hdu, factor) if return_factor else new_hdu
+    
+def compute_zp_for_coords_array(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    model_dict: dict,
+    *,
+    safe_global_fallback: bool = False,
+    out_dtype=np.float32,
+) -> np.ndarray:
+    """
+    Compute zero points from RA and Dec arrays using a ZP model.
+
+    Parameters
+    ----------
+    ra, dec : array-like
+        RA and Dec in degrees. Must be same shape.
+    model_dict : dict
+        Zero-point model (JSON already loaded) with:
+        - "grid" : 2D array of local deviations (mag)
+        - "ra_centers", "dec_centers" (optional)
+        - "global_median" : float
+    safe_global_fallback : bool, default True
+        If interpolation fails or returns NaN, fallback to global median.
+        If False, raise.
+    out_dtype : numpy dtype, default np.float32
+        Output dtype for zp array.
+
+    Returns
+    -------
+    zp : np.ndarray
+        Array of zero points (mag) with the same shape as ra/dec.
+    """
+    ra = np.asarray(ra, dtype=float)
+    dec = np.asarray(dec, dtype=float)
+
+    if ra.shape != dec.shape:
+        raise ValueError(f"ra and dec must have the same shape. Got {ra.shape} and {dec.shape}.")
+
+    global_median = float(model_dict.get("global_median", 0.0))
+    zp_fn = _build_zp_interpolator_from_model(model_dict)
+
+    try:
+        zp = zp_fn(ra, dec).astype(out_dtype, copy=False)
+        if safe_global_fallback:
+            bad = ~np.isfinite(zp)
+            if bad.any():
+                zp = zp.copy()
+                zp[bad] = global_median
+        else:
+            if not np.all(np.isfinite(zp)):
+                raise ValueError("ZP interpolation returned NaN/inf and safe fallback is disabled.")
+    except Exception:
+        if not safe_global_fallback:
+            raise
+        zp = np.full_like(ra, global_median, dtype=out_dtype)
+
+    return zp

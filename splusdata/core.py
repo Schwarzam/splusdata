@@ -670,6 +670,33 @@ class Core:
             stamp.writeto(outfile, overwrite=True)
         return stamp
     
+    def get_zps_field(self, ras, decs, field, band, data_release="dr6"):
+        """
+        Compute zero-point (ZP) values for a set of coordinates in a specific field and band.
+
+        Parameters
+        ----------
+        ras : array-like
+            Right ascension values in degrees.
+        decs : array-like
+            Declination values in degrees. Must have the same shape as `ras`.
+        field : str
+            Name of the S-PLUS field to retrieve the ZP model for.
+        band : str
+            S-PLUS band name (e.g., 'r', 'g', 'J0660') to get the corresponding ZP model.
+        data_release : str, optional
+            Data release identifier. Default is "dr6".
+
+        Returns
+        -------
+        np.ndarray
+            Array of zero-point values (in magnitudes) for each input (RA, Dec) pair.
+        """
+        zp_model = self.get_zp_file(field, band, data_release=data_release)
+        
+        from splusdata.features.zeropoints.zp_image import compute_zp_for_coords_array
+        return compute_zp_for_coords_array(ras, decs, zp_model)
+    
     def check_coords(self, ra, dec, radius=1 * u.degree):
         """Check which DR contains a pointing within `radius` of (ra, dec).
 
@@ -716,7 +743,7 @@ class Core:
                 print(f"Downloading {f['filename']}")
                 try:
                     if not os.path.exists(os.path.join(outfolder, f['filename'])):
-                        self.client.download_file(file_id=f['id'], output_path=os.path.join(outfolder, f['filename']), timeout=60)
+                        self.client.download_file(file_id=f['id'], output_path=os.path.join(outfolder, f['filename']), timeout=180)
                     else:
                         print(f"File {f['filename']} already exists, skipping download.")
                 except Exception as e:
