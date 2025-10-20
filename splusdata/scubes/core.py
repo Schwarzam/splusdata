@@ -42,15 +42,14 @@ def _get_band_info_array(prop):
 
 class SCubes:
     def __init__(self, ra, dec, field, size=None, username=None, password=None, verbose=1):
+        # ignore some warnings without verbosity
+        warnings.simplefilter('ignore', category=VerifyWarning)
+        warnings.simplefilter('ignore', category=FITSFixedWarning)
+
         self.conn = Core(username, password, verbose=verbose)
         self.field = field
         self.verbose = verbose
         self.mem = False
-
-        if verbose == 0:
-            # dactivate warnings without verbosity
-            warnings.simplefilter('ignore', category=VerifyWarning)
-            warnings.simplefilter('ignore', category=FITSFixedWarning)
 
         self.cubepath = None
         self._stamp_config(ra, dec, size)
