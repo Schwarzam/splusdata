@@ -227,11 +227,12 @@ def scubesml():
         ra = mlcut['RA__deg'][0]
         dec = mlcut['DEC__deg'][0]
         field = mlcut['FIELD'][0]
-        size_pix = mlcut['SIZE__pix'][0]
-        print(ra, dec, field, size_pix)
+        size_pix = max(round(args.size_multiplicator*float(mlcut['SIZE__pix'][0])/2)*2, args.min_size)
+        #print(size_pix)
+        #print(ra, dec, field, size_pix)
         creator = SCubes(
             ra=ra, dec=dec, field=field, 
-            size=max(round(args.size_multiplicator*float(size_pix)/2)*2, args.min_size), 
+            size=size_pix, 
             username=args.username, password=args.password, verbose=args.verbose
         )
         #try:
