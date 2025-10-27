@@ -32,6 +32,11 @@ dependencies = [
 
 [project.scripts]
 splusdata = "splusdata.readconf:main"
+spd_ff = "splusdata.scripts.utils:field_frame"
+spd_stamp = "splusdata.scripts.utils:stamp"
+spd_lupton_RGB = "splusdata.scripts.utils:lupton_rgb"
+spd_trilogy_image = "splusdata.scripts.utils:trilogy_image"
+spd_calibrated_stamp = "splusdata.scripts.utils:calibrated_stamp"
 spd_scubes = "splusdata.scubes.scripts:scubes"
 spd_scubesml = "splusdata.scubes.scripts:scubesml"
 
