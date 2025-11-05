@@ -493,7 +493,7 @@ class Core:
 
         return Image.open(io.BytesIO(stamp_bytes))
     
-    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 320):
+    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, mode = "async"):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -534,13 +534,22 @@ class Core:
             else:
                 raise ValueError("table_upload must be a pandas DataFrame or an astropy Table")
 
-        response = self.client.query_and_wait(
-            query_text=query,
-            table_name=table_name,
-            file=table_upload_bytes, 
-            verbose=verbose,
-            timeout = 320
-        )
+        if mode == "async":
+            response = self.client.query_and_wait(
+                query_text=query,
+                table_name=table_name,
+                file=table_upload_bytes, 
+                verbose=verbose,
+                timeout = timeout
+            )
+        else:
+            response = self.client.query(
+                query_text=query,
+                table_name=table_name,
+                file=table_upload_bytes, 
+                timeout = 10
+            )
+            
         return response.data
 
     def get_zp_file(self, field, band, data_release = "dr6"):
@@ -718,7 +727,20 @@ class Core:
         Exception
             Propagates any errors from `find_pointing`.
         """
+        
         return find_pointing(ra, dec, radius=radius)
+    
+    def check_coords_query(self, ra, dec):
+        res = self.query(
+            f"SELECT top 10 field from idr6.idr6 where 1=CONTAINS(POINT(ra, dec), CIRCLE({ra},{dec},60./3600))",
+            mode = "sync"    
+        )
+        
+        # res is a df with a column 'field'
+        fields = res['field'].tolist()
+        # get unique fields
+        fields = list(set(fields))
+        return fields
     
     def download_collection(self, collection, outfolder="."):
         if isinstance(collection, str):
