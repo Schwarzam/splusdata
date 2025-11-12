@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "splusdata"
-version = "5.44"
+version = "5.45"
 description = "Download SPLUS catalogs, FITS and more"
 authors = [
     { name = "Gustavo Schwarz", email = "gustavo.b.schwarz@gmail.com" }

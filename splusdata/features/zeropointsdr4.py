@@ -1,7 +1,11 @@
 import pandas as pd
 
-source_cat = "https://splus.cloud/files/documentation/iDR4/tabelas/iDR4_zero-points.csv"
-zps = pd.read_csv(source_cat)
+try:
+    source_cat = "https://splus.cloud/files/documentation/iDR4/tabelas/iDR4_zero-points.csv"
+    zps = pd.read_csv(source_cat)
+except Exception as e:
+    #print(f"Error loading zero points data: {e}")
+    pass
 
 def get_zeropoint(conn, ra, dec, band):
     """
