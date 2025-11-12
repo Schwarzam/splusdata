@@ -2,7 +2,11 @@ import pandas as pd
 
 try:
     source_cat = "https://splus.cloud/files/documentation/iDR4/tabelas/iDR4_zero-points.csv"
-    zps = pd.read_csv(source_cat)
+    import requests
+    import io 
+    
+    r = requests.get(source_cat, timeout=5)
+    zps = pd.read_csv(io.StringIO(r.text))
 except Exception as e:
     #print(f"Error loading zero points data: {e}")
     pass
