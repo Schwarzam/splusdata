@@ -493,7 +493,7 @@ class Core:
 
         return Image.open(io.BytesIO(stamp_bytes))
     
-    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, mode = "async"):
+    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, execution_mode = "async", lang = "astroql"):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -534,20 +534,22 @@ class Core:
             else:
                 raise ValueError("table_upload must be a pandas DataFrame or an astropy Table")
 
-        if mode == "async":
+        if execution_mode == "async":
             response = self.client.query_and_wait(
                 query_text=query,
                 table_name=table_name,
                 file=table_upload_bytes, 
                 verbose=verbose,
-                timeout = timeout
+                timeout = timeout,
+                mode = lang,
             )
         else:
             response = self.client.query(
                 query_text=query,
                 table_name=table_name,
                 file=table_upload_bytes, 
-                timeout = 10
+                timeout = 10,
+                mode = lang,
             )
             
         return response.data
@@ -742,7 +744,7 @@ class Core:
         fields = list(set(fields))
         return fields
     
-    def download_collection(self, collection, outfolder="."):
+    def download_collection(self, collection, outfolder=".", **kwargs):
         if isinstance(collection, str):
             collection = self.get_collection_id_by_pattern(collection)
         elif isinstance(collection, int):
@@ -757,7 +759,8 @@ class Core:
             files = self.client.list_files(
                 collection_id=collection['id'],
                 skip=skip,
-                limit=200
+                limit=200,
+                **kwargs
             )
             if len(files) == 0:
                 not_over = False
