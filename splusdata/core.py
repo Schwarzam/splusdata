@@ -253,7 +253,16 @@ class Core:
 
         return final_candidate
 
-    def field_frame(self, field, band, weight=False, outfile=None, data_release="dr4", timeout = 60):
+    def field_frame(
+        self, 
+        field, 
+        band, 
+        weight=False, 
+        outfile=None, 
+        data_release="dr4", 
+        timeout = 60, 
+        verbose = False
+    ):
         """Download and open a full field FITS image.
 
         Parameters
@@ -284,7 +293,13 @@ class Core:
         else:
             pattern = ""
 
+        if verbose:
+            print(field,band,pattern,data_release)
         final_candidate = self.get_file_metadata(field, band, pattern, data_release)
+        
+        if verbose:
+            print(final_candidate)
+            
         image_bytes = self.client.download_file(
             final_candidate['id'],
             output_path=outfile,
