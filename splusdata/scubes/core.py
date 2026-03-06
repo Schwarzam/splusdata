@@ -13,6 +13,7 @@ from astropy.wcs import FITSFixedWarning
 from astropy.io.fits.verify import VerifyWarning
 
 from splusdata.scubes.read import read_scube
+from splusdata.scubes.utils import _zpcalibdata_to_flux, _flam_unit
 from splusdata.vars import BANDS, BANDWAVEINFO, get_band_info
 from splusdata.features.io import print_level, convert_coord_to_degrees
 
@@ -93,7 +94,7 @@ class SCubes:
                 wimages.append(kw_args['outfile'])
         self.images = images
         self.wimages = wimages
-
+    '''
     def _photospectra(self, flam_scale=None, ext=1):
         flam_scale = 1e-19 if flam_scale is None else flam_scale
         _c = const.c
@@ -126,6 +127,23 @@ class SCubes:
         self.eflam__byx = eflam__byx
         self.weidata__byx = weidata__byx
         self.absweidata__byx = absweidata__byx
+    '''
+
+    def _photospectra(self, flam_scale=None, ext=1):
+        flam_scale = 1e-19 if flam_scale is None else flam_scale
+        self.wl__b = _get_band_info_array('pivot_wave')
+        self.weidata__byx = self._getdata(self.wimages, ext)
+        flam__byx, eflam__byx = _zpcalibdata_to_flux(
+            zpcalibdata=self._getdata(self.images, ext),
+            weights=self.weidata__byx,
+            wavelenghts=self.wl__b,
+            zp_factor=self._getdata(self.images, 2),
+            gain=self._getval(self.images, 'GAIN', ext),
+            flux_scale=(1/flam_scale),
+        )
+        self.flam__byx = flam__byx
+        self.eflam__byx = eflam__byx
+        self.absweidata__byx = np.abs(self.weidata__byx)
 
     def _stamp_WCS_to_cube_header(self, header):
         '''
@@ -203,7 +221,7 @@ class SCubes:
         for hdu in hdul[1:]:
             hdu.header['BSCALE'] = (self.flam_scale, 'Linear factor in scaling equation')
             hdu.header['BZERO'] = (0, 'Zero point in scaling equation') 
-            hdu.header['BUNIT'] = (f'{self.flam_unit}', 'Physical units of the array values')
+            hdu.header['BUNIT'] = (f'{_flam_unit}', 'Physical units of the array values')
         hdul.append(self._weights_mask_hdu())
         hdul.append(self._metadata_hdu(ext))
         print_level(f'writting cube {self.cubepath}', 1, self.verbose)
