@@ -721,7 +721,7 @@ class Core:
     def check_coords_query(self, ra, dec):
         res = self.query(
             f"SELECT top 10 field from idr6.idr6 where 1=CONTAINS(POINT(ra, dec), CIRCLE({ra},{dec},60./3600))",
-            mode = "sync"    
+            execution_mode = "sync"    
         )
         
         # res is a df with a column 'field'
