@@ -720,7 +720,7 @@ class Core:
     
     def check_coords_query(self, ra, dec):
         res = self.query(
-            f"SELECT top 10 field from idr6.idr6 where 1=CONTAINS(POINT(ra, dec), CIRCLE({ra},{dec},60./3600))",
+            f"SELECT top 10 field from idr6.idr6 where cone(ra, dec, {ra},{dec}, 0.01)",
             execution_mode = "sync"    
         )
         
