@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "splusdata"
-version = "5.46"
+version = "5.53"
 description = "Download SPLUS catalogs, FITS and more"
 authors = [
     { name = "Gustavo Schwarz", email = "gustavo.b.schwarz@gmail.com" }
@@ -18,7 +18,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License"
 ]
 dependencies = [
-    "adss>=1.36",
+    "adss>=1.38",
     "requests",
     "astropy",
     "astroquery",

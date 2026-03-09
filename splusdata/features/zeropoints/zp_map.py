@@ -66,80 +66,206 @@ def _reconstruct_centers_from_model(model, axis="ra", grid_len=None):
 
 def zp_at_coord(model, ra, dec, margin=0.1):
     """
-    Get zero-point correction for a given coordinate.
+    Get zero-point correction(s) for coordinate(s).
 
-    Parameters
-    ----------
-    model : dict
-        Zero-point calibration model loaded from JSON.
-    ra : float
-        Right Ascension in degrees.
-    dec : float
-        Declination in degrees.
-    margin : float, optional
-        Allowed margin (in degrees) outside the grid before warning.
-        Default = 0.1 deg.
+    Accepts:
+      - ra:  float or array-like
+      - dec: float or array-like
 
-    Returns
-    -------
-    float
-        Zero-point correction value (mag).
+    Supports broadcasting:
+      - scalar ra with array dec
+      - array ra with scalar dec
+      - array ra with array dec (same shape or broadcastable)
+
+    Returns:
+      - float if both inputs are scalar
+      - np.ndarray otherwise
+
+    Notes:
+      - Keeps your original behavior: if ANY point is out of bounds (with margin)
+        or interpolation yields NaN, it raises Exception (instead of partial fill).
     """
-    global_median = model.get("global_median", 0.0)
+    global_median = float(model.get("global_median", 0.0))
 
-    
-    if "grid" in model and "ra_centers" in model and "dec_centers" in model:
-        ra_centers = np.array(model["ra_centers"])
-        dec_centers = np.array(model["dec_centers"])
-        grid = np.array(model["grid"])
+    # If no grid info, fallback
+    if not ("grid" in model and "ra_centers" in model and "dec_centers" in model):
+        if np.isscalar(ra) and np.isscalar(dec):
+            return global_median
+        ra_arr = np.asarray(ra, dtype=float)
+        dec_arr = np.asarray(dec, dtype=float)
+        ra_b, dec_b = np.broadcast_arrays(ra_arr, dec_arr)
+        return np.full(ra_b.shape, global_median, dtype=float)
 
-        need_rebuild = (
-            ra_centers.size == 0 or
-            dec_centers.size == 0 or
-            grid.shape[0] != ra_centers.size or
-            grid.shape[1] != dec_centers.size
+    # Load saved arrays
+    grid = np.asarray(model["grid"], dtype=float)
+    ra_centers = np.asarray(model.get("ra_centers", []), dtype=float)
+    dec_centers = np.asarray(model.get("dec_centers", []), dtype=float)
+
+    # Rebuild centers if needed (mismatch / empty)
+    need_rebuild = (
+        ra_centers.size == 0 or
+        dec_centers.size == 0 or
+        grid.ndim != 2 or
+        grid.shape[0] != ra_centers.size or
+        grid.shape[1] != dec_centers.size
+    )
+    if need_rebuild:
+        ra_centers = _reconstruct_centers_from_model(model, "ra", grid_len=grid.shape[0])
+        dec_centers = _reconstruct_centers_from_model(model, "dec", grid_len=grid.shape[1])
+
+    # Normalize inputs + broadcast
+    ra_is_scalar = np.isscalar(ra)
+    dec_is_scalar = np.isscalar(dec)
+
+    ra_arr = np.asarray(ra, dtype=float)
+    dec_arr = np.asarray(dec, dtype=float)
+    ra_b, dec_b = np.broadcast_arrays(ra_arr, dec_arr)
+
+    # Vectorized bounds check
+    ra_min, ra_max = float(np.min(ra_centers)), float(np.max(ra_centers))
+    dec_min, dec_max = float(np.min(dec_centers)), float(np.max(dec_centers))
+
+    in_bounds = (
+        (ra_b >= (ra_min - margin)) & (ra_b <= (ra_max + margin)) &
+        (dec_b >= (dec_min - margin)) & (dec_b <= (dec_max + margin))
+    )
+
+    if not np.all(in_bounds):
+        bad = np.argwhere(~in_bounds)
+        i0 = tuple(bad[0])  # first offending index
+        warnings.warn(
+            f"Some coordinates are outside the grid range RA=[{ra_min:.3f}, {ra_max:.3f}] "
+            f"Dec=[{dec_min:.3f}, {dec_max:.3f}] (margin={margin:.3f}). "
+            f"Example at index {i0}: (RA={ra_b[i0]:.3f}, Dec={dec_b[i0]:.3f}). "
+            "Falling back to global median (raising exception, per original behavior)."
         )
-        if need_rebuild:
-            ra_centers = _reconstruct_centers_from_model(model, "ra", grid_len=grid.shape[0])
-            dec_centers = _reconstruct_centers_from_model(model, "dec", grid_len=grid.shape[1])
-            
-        
-        ra_min, ra_max = ra_centers.min(), ra_centers.max()
-        dec_min, dec_max = dec_centers.min(), dec_centers.max()
+        raise Exception("Some coordinates are outside the grid range.")
 
-        # Check bounds with margin
-        if not (ra_min - margin <= ra <= ra_max + margin and
-                dec_min - margin <= dec <= dec_max + margin):
-            warnings.warn(
-                f"Coordinate (RA={ra:.3f}, Dec={dec:.3f}) is outside "
-                f"the grid range RA=[{ra_min:.3f}, {ra_max:.3f}], "
-                f"Dec=[{dec_min:.3f}, {dec_max:.3f}]. "
-                "Falling back to global median."
-            )
-            raise Exception(
-                f"Coordinate (RA={ra}, Dec={dec}) is outside the grid range."
-            )
+    # Build interpolator once
+    interpolator = RegularGridInterpolator(
+        (ra_centers, dec_centers),
+        grid,
+        bounds_error=False,
+        fill_value=np.nan,
+    )
 
-        # Interpolator
-        interpolator = RegularGridInterpolator(
-            (ra_centers, dec_centers), grid,
-            bounds_error=False,
-            fill_value=np.nan
+    # Interpolate all points
+    pts = np.column_stack([ra_b.ravel(), dec_b.ravel()])  # (N, 2)
+    zp = interpolator(pts).reshape(ra_b.shape)
+
+    if np.any(np.isnan(zp)):
+        bad = np.argwhere(np.isnan(zp))
+        i0 = tuple(bad[0])
+        warnings.warn(
+            f"Interpolation failed (NaN) for some coordinates. "
+            f"Example at index {i0}: (RA={ra_b[i0]:.3f}, Dec={dec_b[i0]:.3f}). "
+            "Returning global median (raising exception, per original behavior)."
         )
-        zp_value = interpolator([[ra, dec]])[0]
+        raise Exception("Interpolation failed (NaN) for some coordinates.")
 
-        # If interpolator returns NaN, fallback
-        if np.isnan(zp_value):
-            warnings.warn(
-                f"Interpolation failed at (RA={ra:.3f}, Dec={dec:.3f}). "
-                "Returning global median."
-            )
-            raise Exception(
-                f"Interpolation failed at (RA={ra}, Dec={dec}). "
-                "Falling back to global median."
-            )
+    out = zp + global_median
 
-        return float(zp_value) + global_median
+    # Return scalar if scalar inputs
+    if ra_is_scalar and dec_is_scalar:
+        return float(out)
 
-    # Fallback if no grid in model
-    return global_median
+    return out
+    """
+    Vectorized zero-point correction lookup.
+
+    Accepts:
+      - ra: float or array-like
+      - dec: float or array-like
+    Supports broadcasting:
+      - ra scalar + dec array
+      - ra array + dec scalar
+      - ra array + dec array (same shape or broadcastable)
+
+    Returns:
+      - float if both inputs are scalar (and return_scalar_if_scalar=True)
+      - np.ndarray otherwise
+    """
+    global_median = float(model.get("global_median", 0.0))
+
+    # If no grid, always fallback
+    if not ("grid" in model and ("ra_centers" in model or True) and ("dec_centers" in model or True)):
+        # keep original behavior: return global median only
+        if np.isscalar(ra) and np.isscalar(dec) and return_scalar_if_scalar:
+            return global_median
+        ra_arr = np.asarray(ra, dtype=float)
+        dec_arr = np.asarray(dec, dtype=float)
+        ra_b, dec_b = np.broadcast_arrays(ra_arr, dec_arr)
+        return np.full(ra_b.shape, global_median, dtype=float)
+
+    # Load arrays
+    grid = np.asarray(model["grid"], dtype=float)
+    ra_centers = np.asarray(model.get("ra_centers", []), dtype=float)
+    dec_centers = np.asarray(model.get("dec_centers", []), dtype=float)
+
+    # Rebuild centers if needed
+    need_rebuild = (
+        ra_centers.size == 0 or
+        dec_centers.size == 0 or
+        grid.ndim != 2 or
+        grid.shape[0] != ra_centers.size or
+        grid.shape[1] != dec_centers.size
+    )
+    if need_rebuild:
+        ra_centers = _reconstruct_centers_from_model(model, "ra", grid_len=grid.shape[0])
+        dec_centers = _reconstruct_centers_from_model(model, "dec", grid_len=grid.shape[1])
+
+    # Interpolator (build once)
+    interpolator = RegularGridInterpolator(
+        (ra_centers, dec_centers),
+        grid,
+        bounds_error=False,
+        fill_value=np.nan,
+    )
+
+    # Normalize inputs to arrays + broadcast
+    ra_is_scalar = np.isscalar(ra)
+    dec_is_scalar = np.isscalar(dec)
+
+    ra_arr = np.asarray(ra, dtype=float)
+    dec_arr = np.asarray(dec, dtype=float)
+    ra_b, dec_b = np.broadcast_arrays(ra_arr, dec_arr)
+
+    # Bounds check (vectorized) with margin
+    ra_min, ra_max = float(np.min(ra_centers)), float(np.max(ra_centers))
+    dec_min, dec_max = float(np.min(dec_centers)), float(np.max(dec_centers))
+
+    in_bounds = (
+        (ra_b >= (ra_min - margin)) & (ra_b <= (ra_max + margin)) &
+        (dec_b >= (dec_min - margin)) & (dec_b <= (dec_max + margin))
+    )
+
+    if not np.all(in_bounds):
+        bad = np.argwhere(~in_bounds)
+        i0 = tuple(bad[0])  # first offending index
+        warnings.warn(
+            f"Some coordinates are outside the grid range (margin={margin} deg). "
+            f"Example at index {i0}: (RA={ra_b[i0]:.3f}, Dec={dec_b[i0]:.3f}) "
+            f"outside RA=[{ra_min:.3f}, {ra_max:.3f}], Dec=[{dec_min:.3f}, {dec_max:.3f}]."
+        )
+        raise Exception("Some coordinates are outside the grid range.")
+
+    # Evaluate interpolation for all points
+    pts = np.column_stack([ra_b.ravel(), dec_b.ravel()])  # shape (N, 2)
+    zp = interpolator(pts).reshape(ra_b.shape)
+
+    if np.any(np.isnan(zp)):
+        bad = np.argwhere(np.isnan(zp))
+        i0 = tuple(bad[0])
+        warnings.warn(
+            f"Interpolation returned NaN for some points. "
+            f"Example at index {i0}: (RA={ra_b[i0]:.3f}, Dec={dec_b[i0]:.3f})."
+        )
+        raise Exception("Interpolation failed (NaN) for some points.")
+
+    zp = zp + global_median
+
+    # Return float if scalar inputs
+    if return_scalar_if_scalar and ra_is_scalar and dec_is_scalar:
+        return float(zp)
+
+    return zp

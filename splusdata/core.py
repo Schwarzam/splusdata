@@ -176,84 +176,63 @@ class Core:
                 return col
         raise SplusdataError("Collection not found")
     
-    def get_file_metadata(self, field, band, pattern = "", data_release = "dr4"):
-        """Resolve a single file metadata entry matching field/band/pattern.
-
-        Parameters
-        ----------
-        field : str
-            Field identifier (e.g., "SPLUS-n01s10"). If not found, tries swapping
-            '-' and '_' once to be tolerant to naming variants.
-        band : str
-            Filter/band name (e.g., "R", "I", "F660", "U", ...).
-        pattern : str, optional
-            Key into the collection's `patterns` dict. Empty string selects the
-            default pattern list for full science images. "weight" commonly selects
-            weight maps.
-        data_release : str, optional
-            Collection pattern (substring) to select the DR (defaults to "dr4").
-
-        Returns
-        -------
-        dict
-            A file entry suitable for `download_file()`, containing at least
-            `id`, `filename`, and `file_type`.
-
-        Selection Logic
-        ---------------
-        1. Lists candidates via `list_files(collection_id, filter_str=field, filter_name=band)`.
-        2. If none, swaps '-' and '_' in `field` and retries once.
-        3. Reads the collection's `patterns[pattern]`, splits by commas, and filters:
-           - Tokens starting with '!' mean "exclude those containing token".
-           - Otherwise, "include if contains token".
-        4. If multiple remain, prefer those with `file_type == "fz"`.
-
-        Raises
-        ------
-        SplusdataError
-            If no candidate files are found for the given (field, band).
-        KeyError
-            If `pattern` is not a key in the collection's `patterns` dict.
-        """
+    def get_file_metadata(self, field, band, pattern="", data_release="dr4"):
         collection = self.get_collection_id_by_pattern(data_release)
-        collection_id = collection['id']
-        
+        collection_id = collection["id"]
+
         candidates = self.client.list_files(collection_id, filter_str=field, filter_name=band)
-        
-        if len(candidates) == 0 and ("-" in field or "_" in field):
-            field = field.replace("-", "_") if "-" in field else field.replace("_", "-")
-            candidates = self.client.list_files(collection_id, filter_str=field, filter_name=band)
-        if len(candidates) == 0:
+
+        if not candidates and ("-" in field or "_" in field):
+            alt = field.replace("-", "_") if "-" in field else field.replace("_", "-")
+            candidates = self.client.list_files(collection_id, filter_str=alt, filter_name=band)
+            field = alt
+
+        if not candidates:
             raise SplusdataError(f"Field {field} not found in band {band}")
-        
-        patterns = collection['patterns']
 
-        final_candidate = None
-        f_candidates = []
-        
-        pattern = patterns[pattern]
-        
-        pattern = pattern.split(",")
-        for c in candidates:
-            for p in pattern:
-                if p.startswith("!"):
-                    if p not in c['filename']:
-                        f_candidates.append(c)
-                else:
-                    if p in c['filename']:
-                        f_candidates.append(c)
+        patterns = collection["patterns"]
+        if pattern not in patterns:
+            raise KeyError(f"Pattern '{pattern}' not found in collection patterns")
 
-        if len(f_candidates) == 0:
-            final_candidate = candidates[0]
-        elif len(f_candidates) == 1:
-            final_candidate = f_candidates[0]
-        else:
-            fz_candidates = [c for c in f_candidates if c['file_type'] == "fz"]
-            final_candidate = fz_candidates[0] if fz_candidates else f_candidates
+        raw = patterns[pattern]
+        tokens = [t.strip() for t in raw.split(",") if t.strip()]
 
-        return final_candidate
+        include = [t for t in tokens if not t.startswith("!")]
+        exclude = [t[1:] for t in tokens if t.startswith("!")]
 
-    def field_frame(self, field, band, weight=False, outfile=None, data_release="dr4", timeout = 60):
+        def ok(c):
+            fn = c.get("filename", "")
+            # reject if any excluded token appears
+            if any(x in fn for x in exclude):
+                return False
+            # if include list is empty -> accept (no include constraint)
+            if not include:
+                return True
+            # OR semantics: accept if any include token appears
+            return any(x in fn for x in include)
+
+            # If you want AND semantics instead, use:
+            # return all(x in fn for x in include)
+
+        filtered = [c for c in candidates if ok(c)]
+
+        # fallback: if nothing matched, keep original behavior of "just pick first"
+        pool = filtered if filtered else candidates
+
+        # prefer fz
+        fz = [c for c in pool if c.get("file_type") == "fz"]
+        return fz[0] if fz else pool[0]
+
+    def field_frame(
+        self, 
+        field, 
+        band, 
+        weight=False, 
+        outfile=None, 
+        data_release="dr4", 
+        timeout = 60, 
+        verbose = False
+    ):
         """Download and open a full field FITS image.
 
         Parameters
@@ -279,12 +258,19 @@ class Core:
         SplusdataError
             If the file cannot be resolved.
         """
+        pattern = ""
         if weight:
             pattern = "weight"
         else:
             pattern = ""
 
+        if verbose:
+            print(field,band,pattern,data_release)
         final_candidate = self.get_file_metadata(field, band, pattern, data_release)
+        
+        if verbose:
+            print(final_candidate)
+            
         image_bytes = self.client.download_file(
             final_candidate['id'],
             output_path=outfile,
@@ -493,7 +479,7 @@ class Core:
 
         return Image.open(io.BytesIO(stamp_bytes))
     
-    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, mode = "async"):
+    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, execution_mode = "async", lang = "astroql"):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -534,20 +520,22 @@ class Core:
             else:
                 raise ValueError("table_upload must be a pandas DataFrame or an astropy Table")
 
-        if mode == "async":
+        if execution_mode == "async":
             response = self.client.query_and_wait(
                 query_text=query,
                 table_name=table_name,
                 file=table_upload_bytes, 
                 verbose=verbose,
-                timeout = timeout
+                timeout = timeout,
+                mode = lang,
             )
         else:
             response = self.client.query(
                 query_text=query,
                 table_name=table_name,
                 file=table_upload_bytes, 
-                timeout = 10
+                timeout = 10,
+                mode = lang,
             )
             
         return response.data
@@ -732,8 +720,8 @@ class Core:
     
     def check_coords_query(self, ra, dec):
         res = self.query(
-            f"SELECT top 10 field from idr6.idr6 where 1=CONTAINS(POINT(ra, dec), CIRCLE({ra},{dec},60./3600))",
-            mode = "sync"    
+            f"SELECT top 10 field from idr6.idr6 where cone(ra, dec, {ra},{dec}, 0.01)",
+            execution_mode = "sync"    
         )
         
         # res is a df with a column 'field'
@@ -742,7 +730,7 @@ class Core:
         fields = list(set(fields))
         return fields
     
-    def download_collection(self, collection, outfolder="."):
+    def download_collection(self, collection, outfolder=".", **kwargs):
         if isinstance(collection, str):
             collection = self.get_collection_id_by_pattern(collection)
         elif isinstance(collection, int):
@@ -757,7 +745,8 @@ class Core:
             files = self.client.list_files(
                 collection_id=collection['id'],
                 skip=skip,
-                limit=200
+                limit=200,
+                **kwargs
             )
             if len(files) == 0:
                 not_over = False
