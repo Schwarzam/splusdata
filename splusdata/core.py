@@ -729,36 +729,87 @@ class Core:
         # get unique fields
         fields = list(set(fields))
         return fields
-    
-    def download_collection(self, collection, outfolder=".", **kwargs):
+
+
+    def download_collection(
+        self,
+        collection,
+        outfolder=".",
+        path_key="full_path",
+        root_marker="splus",
+        max_workers=2,
+        **kwargs
+    ):
+        import os
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
         if isinstance(collection, str):
             collection = self.get_collection_id_by_pattern(collection)
         elif isinstance(collection, int):
-            collection = {'id': collection}
+            collection = {"id": collection}
 
-        if not os.path.exists(outfolder):
-            os.makedirs(outfolder)
-            
-        not_over = True
+        # limita entre 1 e 5
+        max_workers = max(1, min(int(max_workers), 5))
+
+        os.makedirs(outfolder, exist_ok=True)
+
+        def _download_one(f):
+            final_path = None
+            raw_path = f.get(path_key) or f["filename"]
+
+            try:
+                norm_path = os.path.normpath(raw_path).replace("\\", "/")
+
+                marker = f"{root_marker}/"
+                pos = norm_path.find(marker)
+
+                if pos != -1:
+                    rel_path = norm_path[pos:]
+                else:
+                    rel_path = norm_path.lstrip("/")
+
+                rel_path = os.path.normpath(rel_path)
+                if rel_path.startswith(".."):
+                    return f"Skipping unsafe path: {raw_path}"
+
+                final_path = os.path.join(outfolder, rel_path)
+                os.makedirs(os.path.dirname(final_path), exist_ok=True)
+
+                if os.path.exists(final_path):
+                    return f"File {rel_path} already exists, skipping download."
+
+                print(f"Downloading {rel_path}")
+                self.client.download_file(
+                    file_id=f["id"],
+                    output_path=final_path,
+                    timeout=180
+                )
+                return f"Downloaded {rel_path}"
+
+            except Exception as e:
+                if final_path and os.path.exists(final_path):
+                    try:
+                        os.remove(final_path)
+                    except Exception:
+                        pass
+                return f"Error downloading {raw_path}: {e}"
+
         skip = 0
-        while not_over:
+        while True:
             files = self.client.list_files(
-                collection_id=collection['id'],
+                collection_id=collection["id"],
                 skip=skip,
                 limit=200,
                 **kwargs
             )
+
             if len(files) == 0:
-                not_over = False
-            for f in files:
-                print(f"Downloading {f['filename']}")
-                try:
-                    if not os.path.exists(os.path.join(outfolder, f['filename'])):
-                        self.client.download_file(file_id=f['id'], output_path=os.path.join(outfolder, f['filename']), timeout=180)
-                    else:
-                        print(f"File {f['filename']} already exists, skipping download.")
-                except Exception as e:
-                    # delete partial file if exists
-                    if os.path.exists(os.path.join(outfolder, f['filename'])):
-                        os.remove(os.path.join(outfolder, f['filename']))
-                    print(f"Error downloading {f['filename']}: {e}")
+                break
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [executor.submit(_download_one, f) for f in files]
+
+                for future in as_completed(futures):
+                    print(future.result())
+
+            skip += 200
