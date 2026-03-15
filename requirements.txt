@@ -1,0 +1,12 @@
+# requirements.txt gerado a partir de pyproject.toml [project].dependencies
+# Use: python -m pip install -r requirements.txt
+adss>=1.38
+requests
+astropy
+astroquery
+numpy
+pandas
+scipy
+pillow
+pyyaml
+tqdm

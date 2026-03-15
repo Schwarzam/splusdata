@@ -45,3 +45,10 @@ where = ["."]
 
 # python -m build
 # python -m twine upload dist/*
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0,<8",
+    "flake8>=6.0",
+    "coverage>=7.0"
+]
