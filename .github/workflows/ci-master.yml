@@ -48,7 +48,12 @@ jobs:
         continue-on-error: true
         run: flake8 .
 
-      - name: Test
+      - name: Run tests with coverage
         run: |
-          # Run tests in the tests/ folder explicitly
-          python -m pytest tests -q
+          python -m pytest -q --cov=adss --cov-report=term --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
