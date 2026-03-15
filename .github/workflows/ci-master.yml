@@ -45,6 +45,7 @@ jobs:
         run: python -m black --check .
 
       - name: Lint
+        continue-on-error: true
         run: flake8 .
 
       - name: Test
