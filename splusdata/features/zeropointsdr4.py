@@ -1,15 +1,18 @@
 import pandas as pd
 
 try:
-    source_cat = "https://splus.cloud/files/documentation/iDR4/tabelas/iDR4_zero-points.csv"
+    source_cat = (
+        "https://splus.cloud/files/documentation/iDR4/tabelas/iDR4_zero-points.csv"
+    )
     import requests
-    import io 
-    
+    import io
+
     r = requests.get(source_cat, timeout=5)
     zps = pd.read_csv(io.StringIO(r.text))
 except Exception as e:
-    #print(f"Error loading zero points data: {e}")
+    # print(f"Error loading zero points data: {e}")
     pass
+
 
 def get_zeropoint(conn, ra, dec, band):
     """
@@ -24,7 +27,7 @@ def get_zeropoint(conn, ra, dec, band):
     dec : float
         Declination of the target position (in degrees).
     band : str
-        Photometric band for which to retrieve the zero point (e.g., 'g', 'r', 'i'). 
+        Photometric band for which to retrieve the zero point (e.g., 'g', 'r', 'i').
         If set to 'all', returns zero points for all bands.
 
     Returns
@@ -37,7 +40,7 @@ def get_zeropoint(conn, ra, dec, band):
     ------
     KeyError
         If the provided field or band is not found in the zero point table.
-    
+
     Examples
     --------
     >>> conn = some_connection_object()
@@ -51,16 +54,15 @@ def get_zeropoint(conn, ra, dec, band):
           Field   ZP_u   ZP_g   ZP_r  ...
     1234_56789  25.13  24.98  25.02  ...
     """
-    
-    field =  list(conn.checkcoords(ra, dec).values())[0]
-    
+
+    field = list(conn.checkcoords(ra, dec).values())[0]
+
     zps["Field"] = zps["Field"].str.replace("-", "_")
     field = field.replace("-", "_")
-    
+
     if band.lower() == "all":
         zp = zps[zps["Field"] == field]
     else:
         zp = zps[zps["Field"] == field]["ZP_" + band].values[0]
-    
+
     return zp
-    

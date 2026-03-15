@@ -3,8 +3,9 @@ from os.path import basename
 from datetime import datetime
 from astropy.coordinates import SkyCoord
 
+
 def print_level(msg, level=0, verbose=0):
-    '''
+    """
     Print a message with a specified verbosity level.
 
     Parameters
@@ -18,18 +19,20 @@ def print_level(msg, level=0, verbose=0):
     verbose : int, optional
         The overall verbosity level. Messages with verbosity levels less than or equal to
         this value will be printed. Defaults to 0.
-    '''    
+    """
     import __main__ as main
+
     try:
         __script_name__ = basename(main.__file__)
     except AttributeError:
-        __script_name__ = ''
+        __script_name__ = ""
 
     if verbose >= level:
-        print(f'[{datetime.now().isoformat()}] - {__script_name__}: {msg}')
+        print(f"[{datetime.now().isoformat()}] - {__script_name__}: {msg}")
+
 
 def check_units(ra, dec):
-    '''
+    """
     Check and add units to the input coordinates if units are missing.
 
     Parameters
@@ -44,25 +47,26 @@ def check_units(ra, dec):
     -------
     tuple
         Tuple containing the checked and possibly modified right ascension and declination.
-    '''    
+    """
+
     # Pattern to match: any letter (a-z, A-Z) or "°"
-    # Default unit is degrees, so if no unit, then is assumed as degs. 
+    # Default unit is degrees, so if no unit, then is assumed as degs.
     def check_deg(input_string):
-        pattern = r'[a-zA-Z°]'
+        pattern = r"[a-zA-Z°]"
         # re.search returns a match object if the pattern is found, None otherwise
         if re.search(pattern, input_string):
             return input_string
         else:
-            return input_string + '°'
+            return input_string + "°"
 
     def check(input_string):
-        pattern = r'[hdms]'
+        pattern = r"[hdms]"
         x = re.search(pattern, input_string)
         if x is None:
             return check_deg(input_string)
         else:
             return input_string
-        
+
     if not isinstance(ra, str):
         ra = str(ra)
 
@@ -71,8 +75,9 @@ def check_units(ra, dec):
 
     return check(ra), check(dec)
 
-def convert_coord_to_degrees(ra, dec, frame='icrs'):
-    '''
+
+def convert_coord_to_degrees(ra, dec, frame="icrs"):
+    """
     Convert the input celestial coordinates to degrees.
 
     Parameters
@@ -90,7 +95,7 @@ def convert_coord_to_degrees(ra, dec, frame='icrs'):
     -------
     tuple
         Tuple containing the right ascension and declination converted to degrees.
-    '''
+    """
     ra, dec = check_units(ra, dec)
 
     # Create a SkyCoord object

@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 from scipy.interpolate import RegularGridInterpolator
 
+
 def _reconstruct_centers_from_model(model, axis="ra", grid_len=None):
     """
     Rebuild centers to match the (possibly padded) grid length using the model's
@@ -64,6 +65,7 @@ def _reconstruct_centers_from_model(model, axis="ra", grid_len=None):
 
     return centers
 
+
 def zp_at_coord(model, ra, dec, margin=0.1):
     """
     Get zero-point correction(s) for coordinate(s).
@@ -103,15 +105,19 @@ def zp_at_coord(model, ra, dec, margin=0.1):
 
     # Rebuild centers if needed (mismatch / empty)
     need_rebuild = (
-        ra_centers.size == 0 or
-        dec_centers.size == 0 or
-        grid.ndim != 2 or
-        grid.shape[0] != ra_centers.size or
-        grid.shape[1] != dec_centers.size
+        ra_centers.size == 0
+        or dec_centers.size == 0
+        or grid.ndim != 2
+        or grid.shape[0] != ra_centers.size
+        or grid.shape[1] != dec_centers.size
     )
     if need_rebuild:
-        ra_centers = _reconstruct_centers_from_model(model, "ra", grid_len=grid.shape[0])
-        dec_centers = _reconstruct_centers_from_model(model, "dec", grid_len=grid.shape[1])
+        ra_centers = _reconstruct_centers_from_model(
+            model, "ra", grid_len=grid.shape[0]
+        )
+        dec_centers = _reconstruct_centers_from_model(
+            model, "dec", grid_len=grid.shape[1]
+        )
 
     # Normalize inputs + broadcast
     ra_is_scalar = np.isscalar(ra)
@@ -126,8 +132,10 @@ def zp_at_coord(model, ra, dec, margin=0.1):
     dec_min, dec_max = float(np.min(dec_centers)), float(np.max(dec_centers))
 
     in_bounds = (
-        (ra_b >= (ra_min - margin)) & (ra_b <= (ra_max + margin)) &
-        (dec_b >= (dec_min - margin)) & (dec_b <= (dec_max + margin))
+        (ra_b >= (ra_min - margin))
+        & (ra_b <= (ra_max + margin))
+        & (dec_b >= (dec_min - margin))
+        & (dec_b <= (dec_max + margin))
     )
 
     if not np.all(in_bounds):
@@ -188,7 +196,11 @@ def zp_at_coord(model, ra, dec, margin=0.1):
     global_median = float(model.get("global_median", 0.0))
 
     # If no grid, always fallback
-    if not ("grid" in model and ("ra_centers" in model or True) and ("dec_centers" in model or True)):
+    if not (
+        "grid" in model
+        and ("ra_centers" in model or True)
+        and ("dec_centers" in model or True)
+    ):
         # keep original behavior: return global median only
         if np.isscalar(ra) and np.isscalar(dec) and return_scalar_if_scalar:
             return global_median
@@ -204,15 +216,19 @@ def zp_at_coord(model, ra, dec, margin=0.1):
 
     # Rebuild centers if needed
     need_rebuild = (
-        ra_centers.size == 0 or
-        dec_centers.size == 0 or
-        grid.ndim != 2 or
-        grid.shape[0] != ra_centers.size or
-        grid.shape[1] != dec_centers.size
+        ra_centers.size == 0
+        or dec_centers.size == 0
+        or grid.ndim != 2
+        or grid.shape[0] != ra_centers.size
+        or grid.shape[1] != dec_centers.size
     )
     if need_rebuild:
-        ra_centers = _reconstruct_centers_from_model(model, "ra", grid_len=grid.shape[0])
-        dec_centers = _reconstruct_centers_from_model(model, "dec", grid_len=grid.shape[1])
+        ra_centers = _reconstruct_centers_from_model(
+            model, "ra", grid_len=grid.shape[0]
+        )
+        dec_centers = _reconstruct_centers_from_model(
+            model, "dec", grid_len=grid.shape[1]
+        )
 
     # Interpolator (build once)
     interpolator = RegularGridInterpolator(
@@ -235,8 +251,10 @@ def zp_at_coord(model, ra, dec, margin=0.1):
     dec_min, dec_max = float(np.min(dec_centers)), float(np.max(dec_centers))
 
     in_bounds = (
-        (ra_b >= (ra_min - margin)) & (ra_b <= (ra_max + margin)) &
-        (dec_b >= (dec_min - margin)) & (dec_b <= (dec_max + margin))
+        (ra_b >= (ra_min - margin))
+        & (ra_b <= (ra_max + margin))
+        & (dec_b >= (dec_min - margin))
+        & (dec_b <= (dec_max + margin))
     )
 
     if not np.all(in_bounds):

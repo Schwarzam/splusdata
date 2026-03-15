@@ -10,6 +10,7 @@ import os
 from splusdata.features.io import print_level
 from splusdata.features.find_pointings import find_pointing
 
+
 class SplusdataError(Exception):
     """Custom exception type for S-PLUS data errors raised by this helper module.
 
@@ -39,6 +40,7 @@ def open_image(image_bytes):
         If Pillow cannot identify or open the image.
     """
     from PIL import Image
+
     im = Image.open(io.BytesIO(image_bytes))
     return im
 
@@ -64,7 +66,7 @@ def save_image(image_bytes, filename):
     """
     im = open_image(image_bytes)
     im.save(filename)
-    
+
 
 # field frame
 class Core:
@@ -84,7 +86,14 @@ class Core:
     * All methods pass through to a single `adss.ADSSClient` instance.
     """
 
-    def __init__(self, username=None, password=None, SERVER_IP=f"https://splus.cloud", auto_renew=False, verbose=0):
+    def __init__(
+        self,
+        username=None,
+        password=None,
+        SERVER_IP=f"https://splus.cloud",
+        auto_renew=False,
+        verbose=0,
+    ):
         """Initialize a Core client.
 
         Parameters
@@ -114,9 +123,9 @@ class Core:
         """
         if not username:
             username = input("splus.cloud username: ")
-        if not password:    
+        if not password:
             password = getpass.getpass("splus.cloud password: ")
-            
+
         self.client = adss.ADSSClient(
             SERVER_IP,
             username=username,
@@ -124,7 +133,7 @@ class Core:
         )
         self.collections = []
         self.verbose = verbose
-        
+
     def _load_collections(self):
         """Fetch and cache image collections from the server.
 
@@ -149,7 +158,7 @@ class Core:
             Collection names, e.g., ["dr4", "dr5", "dr6", ...].
         """
         collections = self.client.get_collections()
-        names = [col['name'] for col in collections]
+        names = [col["name"] for col in collections]
         return names
 
     def get_collection_id_by_pattern(self, pattern):
@@ -172,19 +181,23 @@ class Core:
         """
         self._load_collections()
         for col in self.collections:
-            if pattern in col['name']:
+            if pattern in col["name"]:
                 return col
         raise SplusdataError("Collection not found")
-    
+
     def get_file_metadata(self, field, band, pattern="", data_release="dr4"):
         collection = self.get_collection_id_by_pattern(data_release)
         collection_id = collection["id"]
 
-        candidates = self.client.list_files(collection_id, filter_str=field, filter_name=band)
+        candidates = self.client.list_files(
+            collection_id, filter_str=field, filter_name=band
+        )
 
         if not candidates and ("-" in field or "_" in field):
             alt = field.replace("-", "_") if "-" in field else field.replace("_", "-")
-            candidates = self.client.list_files(collection_id, filter_str=alt, filter_name=band)
+            candidates = self.client.list_files(
+                collection_id, filter_str=alt, filter_name=band
+            )
             field = alt
 
         if not candidates:
@@ -224,14 +237,14 @@ class Core:
         return fz[0] if fz else pool[0]
 
     def field_frame(
-        self, 
-        field, 
-        band, 
-        weight=False, 
-        outfile=None, 
-        data_release="dr4", 
-        timeout = 60, 
-        verbose = False
+        self,
+        field,
+        band,
+        weight=False,
+        outfile=None,
+        data_release="dr4",
+        timeout=60,
+        verbose=False,
     ):
         """Download and open a full field FITS image.
 
@@ -265,21 +278,31 @@ class Core:
             pattern = ""
 
         if verbose:
-            print(field,band,pattern,data_release)
+            print(field, band, pattern, data_release)
         final_candidate = self.get_file_metadata(field, band, pattern, data_release)
-        
+
         if verbose:
             print(final_candidate)
-            
+
         image_bytes = self.client.download_file(
-            final_candidate['id'],
-            output_path=outfile,
-            timeout=timeout
+            final_candidate["id"], output_path=outfile, timeout=timeout
         )
-        
+
         return fits.open(io.BytesIO(image_bytes))
-                                   
-    def stamp(self, ra, dec, size, band, weight=False, field_name=None, size_unit="pixels", outfile=None, data_release="dr4", timeout = 60):
+
+    def stamp(
+        self,
+        ra,
+        dec,
+        size,
+        band,
+        weight=False,
+        field_name=None,
+        size_unit="pixels",
+        outfile=None,
+        data_release="dr4",
+        timeout=60,
+    ):
         """Create and open a FITS stamp (cutout) by coordinates or by object name.
 
         Parameters
@@ -315,8 +338,8 @@ class Core:
             If the collection cannot be resolved.
         """
         collection = self.get_collection_id_by_pattern(data_release)
-        collection_id = collection['id']
-        
+        collection_id = collection["id"]
+
         if weight:
             weight = "weight"
         if not field_name:
@@ -329,7 +352,7 @@ class Core:
                 size_unit=size_unit,
                 pattern=weight if weight else "",
                 output_path=outfile,
-                timeout=timeout
+                timeout=timeout,
             )
         else:
             stamp_bytes = self.client.stamp_images.create_stamp_by_object(
@@ -342,12 +365,26 @@ class Core:
                 size_unit=size_unit,
                 pattern=weight if weight else "",
                 output_path=outfile,
-                timeout=timeout
+                timeout=timeout,
             )
-            
+
         return fits.open(io.BytesIO(stamp_bytes))
 
-    def lupton_rgb(self, ra, dec, size, R="I", G="R", B="G", Q=8, stretch=3, field_name=None, size_unit="pixels", outfile=None, data_release="dr4"):
+    def lupton_rgb(
+        self,
+        ra,
+        dec,
+        size,
+        R="I",
+        G="R",
+        B="G",
+        Q=8,
+        stretch=3,
+        field_name=None,
+        size_unit="pixels",
+        outfile=None,
+        data_release="dr4",
+    ):
         """Create a Lupton RGB composite and return a PIL image.
 
         Parameters
@@ -377,7 +414,7 @@ class Core:
             Composite RGB image.
         """
         collection = self.get_collection_id_by_pattern(data_release)
-        collection_id = collection['id']
+        collection_id = collection["id"]
 
         if not field_name:
             stamp_bytes = self.client.create_rgb_image_by_coordinates(
@@ -391,7 +428,7 @@ class Core:
                 Q=Q,
                 size_unit=size_unit,
                 stretch=stretch,
-                output_path=outfile
+                output_path=outfile,
             )
         else:
             stamp_bytes = self.client.lupton_images.create_rgb_by_object(
@@ -406,12 +443,27 @@ class Core:
                 Q=Q,
                 size_unit=size_unit,
                 stretch=stretch,
-                output_path=outfile
+                output_path=outfile,
             )
 
         return Image.open(io.BytesIO(stamp_bytes))
 
-    def trilogy_image(self, ra, dec, size, R=["R", "I", "F861", "Z"], G=["G", "F515", "F660"], B=["U", "F378", "F395", "F410", "F430"], noiselum=0.15, satpercent=0.15, colorsatfac=2, size_unit="pixels", field_name=None, outfile=None, data_release="dr4"):
+    def trilogy_image(
+        self,
+        ra,
+        dec,
+        size,
+        R=["R", "I", "F861", "Z"],
+        G=["G", "F515", "F660"],
+        B=["U", "F378", "F395", "F410", "F430"],
+        noiselum=0.15,
+        satpercent=0.15,
+        colorsatfac=2,
+        size_unit="pixels",
+        field_name=None,
+        outfile=None,
+        data_release="dr4",
+    ):
         """Create a Trilogy RGB composite (multi-filter blend) and return a PIL image.
 
         Parameters
@@ -443,7 +495,7 @@ class Core:
             Composite RGB image (Trilogy method).
         """
         collection = self.get_collection_id_by_pattern(data_release)
-        collection_id = collection['id']
+        collection_id = collection["id"]
 
         if not field_name:
             stamp_bytes = self.client.trilogy_images.create_trilogy_rgb_by_coordinates(
@@ -458,7 +510,7 @@ class Core:
                 noiselum=noiselum,
                 satpercent=satpercent,
                 colorsatfac=colorsatfac,
-                output_path=outfile
+                output_path=outfile,
             )
         else:
             stamp_bytes = self.client.trilogy_images.create_trilogy_rgb_by_object(
@@ -474,12 +526,21 @@ class Core:
                 size_unit=size_unit,
                 satpercent=satpercent,
                 colorsatfac=colorsatfac,
-                output_path=outfile
+                output_path=outfile,
             )
 
         return Image.open(io.BytesIO(stamp_bytes))
-    
-    def query(self, query, table_upload=None, table_name=None, verbose = False, timeout = 3200, execution_mode = "async", lang = "astroql"):
+
+    def query(
+        self,
+        query,
+        table_upload=None,
+        table_name=None,
+        verbose=False,
+        timeout=3200,
+        execution_mode="async",
+        lang="astroql",
+    ):
         """Execute a server-side query; optionally upload a small table first.
 
         Parameters
@@ -511,36 +572,40 @@ class Core:
         if table_upload is not None and table_name is not None:
             import pandas as pd
             from astropy.table import Table
-            
+
             table_upload_bytes = None
             if isinstance(table_upload, pd.DataFrame):
                 table_upload_bytes = table_upload.to_csv(index=False).encode()
             elif isinstance(table_upload, Table):
-                table_upload_bytes = table_upload.to_pandas().to_csv(index=False).encode()
+                table_upload_bytes = (
+                    table_upload.to_pandas().to_csv(index=False).encode()
+                )
             else:
-                raise ValueError("table_upload must be a pandas DataFrame or an astropy Table")
+                raise ValueError(
+                    "table_upload must be a pandas DataFrame or an astropy Table"
+                )
 
         if execution_mode == "async":
             response = self.client.query_and_wait(
                 query_text=query,
                 table_name=table_name,
-                file=table_upload_bytes, 
+                file=table_upload_bytes,
                 verbose=verbose,
-                timeout = timeout,
-                mode = lang,
+                timeout=timeout,
+                mode=lang,
             )
         else:
             response = self.client.query(
                 query_text=query,
                 table_name=table_name,
-                file=table_upload_bytes, 
-                timeout = 10,
-                mode = lang,
+                file=table_upload_bytes,
+                timeout=10,
+                mode=lang,
             )
-            
+
         return response.data
 
-    def get_zp_file(self, field, band, data_release = "dr6"):
+    def get_zp_file(self, field, band, data_release="dr6"):
         """Download and parse the per-field zero-point model (DR6).
 
         Parameters
@@ -565,22 +630,25 @@ class Core:
             If the downloaded bytes are not valid JSON.
         """
         import json
+
         collection = self.get_collection_id_by_pattern(data_release)
-        collection_id = collection['id']
-        
+        collection_id = collection["id"]
+
         files = self.client.list_files(
-            collection_id, 
-            filter_str=f"{field}_{band}_zp", 
+            collection_id,
+            filter_str=f"{field}_{band}_zp",
         )
         if len(files) == 0:
-            raise SplusdataError(f"No zp model found for field {field} in band {band} in {data_release}")
+            raise SplusdataError(
+                f"No zp model found for field {field} in band {band} in {data_release}"
+            )
         file = files[0]
-        
+
         print_level(f"Downloading zp_model {file['filename']}", 1, self.verbose)
-        json_bytes = self.client.download_file(file["id"], timeout = 20)
+        json_bytes = self.client.download_file(file["id"], timeout=20)
         json_data = json.loads(json_bytes)
         return json_data
-    
+
     def get_zp(self, field, band, ra, dec):
         """Evaluate the local zero point at a sky position using the field model.
 
@@ -606,11 +674,23 @@ class Core:
             Any error propagated from `zp_at_coord` evaluation.
         """
         model = self.get_zp_file(field, band)
-        
+
         from splusdata.features.zeropoints.zp_map import zp_at_coord
+
         return zp_at_coord(model, ra, dec)
-    
-    def calibrated_stamp(self, ra, dec, size, band, weight=False, field_name=None, size_unit="pixels", outfile=None, data_release="dr6"):
+
+    def calibrated_stamp(
+        self,
+        ra,
+        dec,
+        size,
+        band,
+        weight=False,
+        field_name=None,
+        size_unit="pixels",
+        outfile=None,
+        data_release="dr6",
+    ):
         """Create a stamp and return a photometrically calibrated PrimaryHDU.
 
         This computes a cutout via `stamp(...)`, then loads the appropriate DR6+
@@ -650,23 +730,39 @@ class Core:
         Exception
             Propagates any calibration errors from `calibrate_hdu_with_zpmodel`.
         """
-        stamp = self.stamp(ra, dec, size, band, weight=weight, field_name=field_name, size_unit=size_unit, data_release=data_release)
-        
-        if not weight:           
-            from splusdata.features.zeropoints.zp_image import calibrate_hdu_with_zpmodel
-            zp_model = self.get_zp_file(stamp[1].header["FIELD"], stamp[1].header["FILTER"], data_release=data_release)
-            
+        stamp = self.stamp(
+            ra,
+            dec,
+            size,
+            band,
+            weight=weight,
+            field_name=field_name,
+            size_unit=size_unit,
+            data_release=data_release,
+        )
+
+        if not weight:
+            from splusdata.features.zeropoints.zp_image import (
+                calibrate_hdu_with_zpmodel,
+            )
+
+            zp_model = self.get_zp_file(
+                stamp[1].header["FIELD"],
+                stamp[1].header["FILTER"],
+                data_release=data_release,
+            )
+
             calibrated_hdu, factor_map = calibrate_hdu_with_zpmodel(
                 stamp[1], zp_model, in_place=False, return_factor=True
             )
 
             stamp[1] = calibrated_hdu
             stamp.append(fits.ImageHDU(factor_map, name="ZP_FACTOR"))
-        
+
         if outfile:
             stamp.writeto(outfile, overwrite=True)
         return stamp
-    
+
     def get_zps_field(self, ras, decs, field, band, data_release="dr6"):
         """
         Compute zero-point (ZP) values for a set of coordinates in a specific field and band.
@@ -690,10 +786,11 @@ class Core:
             Array of zero-point values (in magnitudes) for each input (RA, Dec) pair.
         """
         zp_model = self.get_zp_file(field, band, data_release=data_release)
-        
+
         from splusdata.features.zeropoints.zp_image import compute_zp_for_coords_array
+
         return compute_zp_for_coords_array(ras, decs, zp_model)
-    
+
     def check_coords(self, ra, dec, radius=1 * u.degree):
         """Check which DR contains a pointing within `radius` of (ra, dec).
 
@@ -715,21 +812,20 @@ class Core:
         Exception
             Propagates any errors from `find_pointing`.
         """
-        
+
         return find_pointing(ra, dec, radius=radius)
-    
+
     def check_coords_query(self, ra, dec):
         res = self.query(
             f"SELECT top 10 field from idr6.idr6 where cone(ra, dec, {ra},{dec}, 0.01)",
-            execution_mode = "sync"    
+            execution_mode="sync",
         )
-        
+
         # res is a df with a column 'field'
-        fields = res['field'].tolist()
+        fields = res["field"].tolist()
         # get unique fields
         fields = list(set(fields))
         return fields
-
 
     def download_collection(
         self,
@@ -738,7 +834,7 @@ class Core:
         path_key="full_path",
         root_marker="splus",
         max_workers=2,
-        **kwargs
+        **kwargs,
     ):
         import os
         from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -780,9 +876,7 @@ class Core:
 
                 print(f"Downloading {rel_path}")
                 self.client.download_file(
-                    file_id=f["id"],
-                    output_path=final_path,
-                    timeout=180
+                    file_id=f["id"], output_path=final_path, timeout=180
                 )
                 return f"Downloaded {rel_path}"
 
@@ -797,10 +891,7 @@ class Core:
         skip = 0
         while True:
             files = self.client.list_files(
-                collection_id=collection["id"],
-                skip=skip,
-                limit=200,
-                **kwargs
+                collection_id=collection["id"], skip=skip, limit=200, **kwargs
             )
 
             if len(files) == 0:
