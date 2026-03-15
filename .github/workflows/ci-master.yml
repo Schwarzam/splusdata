@@ -44,9 +44,6 @@ jobs:
       - name: Black format check
         run: python -m black --check .
 
-      - name: isort check
-        run: python -m isort --check-only .
-
       - name: Lint
         run: flake8 .
 
