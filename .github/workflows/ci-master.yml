@@ -38,17 +38,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[test]"
-          # install formatting tools used in CI
-          python -m pip install black isort
 
       - name: Black format check
         run: python -m black --check .
 
       - name: Lint
-        continue-on-error: true
         run: flake8 .
 
-      - name: Test
+      - name: Unit tests
         run: |
-          # Run tests in the tests/ folder explicitly
-          python -m pytest tests -q
+          python -m pytest tests -q -m "not integration"
+
+      - name: Integration tests (real API)
+        if: matrix.python-version == '3.11'
+        env:
+          SPLUS_USERNAME: ${{ secrets.SPLUS_USERNAME }}
+          SPLUS_PASSWORD: ${{ secrets.SPLUS_PASSWORD }}
+          SPLUS_SERVER_IP: ${{ secrets.SPLUS_SERVER_IP }}
+        run: |
+          python -m pytest tests/test_core_integration.py -q
+
