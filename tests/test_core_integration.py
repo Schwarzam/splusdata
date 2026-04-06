@@ -13,6 +13,11 @@ def core_client():
     username = os.getenv("SPLUS_USERNAME")
     password = os.getenv("SPLUS_PASSWORD")
     server_ip = os.getenv("SPLUS_SERVER_IP", "https://splus.cloud")
+    server_ip = server_ip.strip()
+    if not server_ip:
+        server_ip = "https://splus.cloud"
+    if not server_ip.startswith(("http://", "https://")):
+        server_ip = f"https://{server_ip}"
 
     if not (username and password):
         pytest.skip("SPLUS_USERNAME/SPLUS_PASSWORD não configurados")
