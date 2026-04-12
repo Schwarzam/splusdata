@@ -16,3 +16,4 @@ splus_data.egg-info/
 site/
 
 dev/
+.vscode

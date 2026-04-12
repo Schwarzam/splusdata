@@ -6,8 +6,12 @@ import datetime
 import pandas as pd
 from astropy.table import Table
 
-from splusdata.features.zeropoints.zp_map import _reconstruct_centers_from_model as _reconstruct_centers
+from splusdata.features.zeropoints.zp_map import (
+    _reconstruct_centers_from_model as _reconstruct_centers,
+)
+
 # ---------- helpers: robust interpolator from model (dict) ----------
+
 
 def _build_zp_interpolator_from_model(model):
     """
@@ -18,7 +22,9 @@ def _build_zp_interpolator_from_model(model):
     global_median = float(model.get("global_median", 0.0))
     grid = np.asarray(model.get("grid", []), dtype=float)
     if grid.ndim != 2:
-        return lambda ra, dec: np.full_like(np.asarray(ra, dtype=float), global_median, dtype=float)
+        return lambda ra, dec: np.full_like(
+            np.asarray(ra, dtype=float), global_median, dtype=float
+        )
 
     ra_centers = np.asarray(model.get("ra_centers", []), dtype=float)
     dec_centers = np.asarray(model.get("dec_centers", []), dtype=float)
@@ -32,15 +38,17 @@ def _build_zp_interpolator_from_model(model):
     # Try (ra, dec) with grid as-is
     try:
         interp_rd = RegularGridInterpolator(
-            (ra_centers, dec_centers), grid,
-            bounds_error=False, fill_value=np.nan
+            (ra_centers, dec_centers), grid, bounds_error=False, fill_value=np.nan
         )
+
         def f_rd(ra, dec):
-            pts = np.column_stack([np.asarray(ra, float).ravel(),
-                                   np.asarray(dec, float).ravel()])
+            pts = np.column_stack(
+                [np.asarray(ra, float).ravel(), np.asarray(dec, float).ravel()]
+            )
             vals = interp_rd(pts).reshape(np.shape(ra))
             vals = np.where(np.isnan(vals), 0.0, vals)  # local deviation fallback = 0
             return global_median + vals
+
         _ = f_rd(np.mean(ra_centers), np.mean(dec_centers))  # sanity check
         return f_rd
     except Exception:
@@ -48,20 +56,26 @@ def _build_zp_interpolator_from_model(model):
 
     # Fallback: (dec, ra) with transposed grid
     interp_dr = RegularGridInterpolator(
-        (dec_centers, ra_centers), grid.T,
-        bounds_error=False, fill_value=np.nan
+        (dec_centers, ra_centers), grid.T, bounds_error=False, fill_value=np.nan
     )
+
     def f_dr(ra, dec):
-        pts = np.column_stack([np.asarray(dec, float).ravel(),
-                               np.asarray(ra, float).ravel()])
+        pts = np.column_stack(
+            [np.asarray(dec, float).ravel(), np.asarray(ra, float).ravel()]
+        )
         vals = interp_dr(pts).reshape(np.shape(ra))
         vals = np.where(np.isnan(vals), 0.0, vals)
         return global_median + vals
+
     return f_dr
+
 
 # ---------- main: in-memory calibration from HDU & model (dict) ----------
 
-def calibrate_hdu_with_zpmodel(hdu, model_dict, *, in_place=False, return_factor=False, safe_global_fallback=True):
+
+def calibrate_hdu_with_zpmodel(
+    hdu, model_dict, *, in_place=False, return_factor=False, safe_global_fallback=True
+):
     """
     Calibrate an already-open FITS HDU (PrimaryHDU or ImageHDU) in memory using a ZP model dict.
 
@@ -121,18 +135,20 @@ def calibrate_hdu_with_zpmodel(hdu, model_dict, *, in_place=False, return_factor
     if in_place:
         hdu.data = calibrated
         # annotate header
-        hdu.header['ZPCALIB'] = True
-        hdu.header['ZPCDATE'] = datetime.datetime.now().isoformat()
-        hdu.header['ZPCMED']  = global_median
+        hdu.header["ZPCALIB"] = True
+        hdu.header["ZPCDATE"] = datetime.datetime.now().isoformat()
+        hdu.header["ZPCMED"] = global_median
         return (hdu, factor) if return_factor else hdu
     else:
         from astropy.io.fits import ImageHDU
+
         new_hdu = ImageHDU(data=calibrated, header=header.copy())
-        new_hdu.header['ZPCALIB'] = True
-        new_hdu.header['ZPCDATE'] = datetime.datetime.now().isoformat()
-        new_hdu.header['ZPCMED']  = global_median
+        new_hdu.header["ZPCALIB"] = True
+        new_hdu.header["ZPCDATE"] = datetime.datetime.now().isoformat()
+        new_hdu.header["ZPCMED"] = global_median
         return (new_hdu, factor) if return_factor else new_hdu
-    
+
+
 def compute_zp_for_coords_array(
     ra: np.ndarray,
     dec: np.ndarray,
@@ -168,7 +184,9 @@ def compute_zp_for_coords_array(
     dec = np.asarray(dec, dtype=float)
 
     if ra.shape != dec.shape:
-        raise ValueError(f"ra and dec must have the same shape. Got {ra.shape} and {dec.shape}.")
+        raise ValueError(
+            f"ra and dec must have the same shape. Got {ra.shape} and {dec.shape}."
+        )
 
     global_median = float(model_dict.get("global_median", 0.0))
     zp_fn = _build_zp_interpolator_from_model(model_dict)
@@ -182,7 +200,9 @@ def compute_zp_for_coords_array(
                 zp[bad] = global_median
         else:
             if not np.all(np.isfinite(zp)):
-                raise ValueError("ZP interpolation returned NaN/inf and safe fallback is disabled.")
+                raise ValueError(
+                    "ZP interpolation returned NaN/inf and safe fallback is disabled."
+                )
     except Exception:
         if not safe_global_fallback:
             raise

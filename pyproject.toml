@@ -10,7 +10,7 @@ authors = [
     { name = "Gustavo Schwarz", email = "gustavo.b.schwarz@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = { text = "Apache-2.0" }
 keywords = ["S-PLUS", "astronomy", "catalogs", "FITS"]
 classifiers = [
@@ -45,3 +45,11 @@ where = ["."]
 
 # python -m build
 # python -m twine upload dist/*
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0,<8",
+    "flake8>=6.0",
+    "black>=23.3,<24.0; python_version == '3.8'",
+    "black>=24.0; python_version >= '3.9'"
+]
