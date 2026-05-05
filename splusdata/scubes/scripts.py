@@ -110,7 +110,7 @@ SCUBES_ARGS = {
     'username': ['U', dict(default=None, help='S-PLUS cloud username.')],
     'password': ['P', dict(default=None, help='S-PLUS cloud password.')],
     'force_mem': ['F', dict(action='store_true', default=False, help='Force memory mapping of downloaded input files.')],
-    'server': ['S', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'field': ['pos', dict(metavar='SPLUS_TILE', help='Name of the S-PLUS field')],
@@ -188,7 +188,7 @@ SCUBESML_ARGS = {
     'password': ['P', dict(default=None, help='S-PLUS Cloud password.')],
     'sname': ['O', dict(default=None, metavar='OBJECT_SNAME', help="Object's masterlist SNAME")],
     'force_mem': ['F', dict(action='store_true', default=False, help='Force memory mapping of downloaded input files.')],
-    'server': ['S', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     'masterlist': ['pos', dict(metavar='MASTERLIST', help='Path to masterlist file')]
 }
@@ -240,7 +240,14 @@ def scubesml():
     parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__scubes_version__))
     args = scubesml_argparse(parser.parse_args(args=sys.argv[1:]))
 
-    sname_list = args.ml['SNAME'] if args.sname is None else [args.sname]
+    if args.sname is not None:
+        if args.sname in args.ml['SNAME']:
+            sname_list = [args.sname]
+        else:
+            print_level(f'{args.sname}: SNAME not found in masterlist')
+            sys.exit(1)
+    else:
+        sname_list = args.ml['SNAME']
 
     for sname in sname_list:
         mlcut = args.ml[args.ml['SNAME'] == sname]
@@ -248,8 +255,6 @@ def scubesml():
         dec = mlcut['DEC__deg'][0]
         field = mlcut['FIELD'][0]
         size_pix = max(round(args.size_multiplicator*float(mlcut['SIZE__pix'][0])/2)*2, args.min_size)
-        #print(size_pix)
-        #print(ra, dec, field, size_pix)
         creator = SCubes(
             ra=ra, dec=dec, field=field, 
             size=size_pix, 
