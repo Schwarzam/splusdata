@@ -42,12 +42,15 @@ def _get_band_info_array(prop):
     return np.array([get_band_info(band)[prop] for band in BANDS])
 
 class SCubes:
-    def __init__(self, ra, dec, field, size=None, username=None, password=None, verbose=1):
+    def __init__(self, ra, dec, field, size=None, username=None, password=None, server=None, verbose=1):
         # ignore some warnings without verbosity
         warnings.simplefilter('ignore', category=VerifyWarning)
         warnings.simplefilter('ignore', category=FITSFixedWarning)
 
-        self.conn = Core(username, password, verbose=verbose)
+        self.conn = Core(
+            username, password, verbose=0 if verbose < 1 else verbose, 
+            SERVER_IP='https://splus.cloud' if server is None else server,
+        )
         self.field = field
         self.verbose = verbose
         self.mem = False
