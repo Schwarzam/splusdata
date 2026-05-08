@@ -8,7 +8,7 @@ from splusdata.features.io import print_level
 from splusdata.scripts.args import create_parser
 from splusdata.scubes.core import __scubes_author__, __scubes_version__
 
-def ml2header_updheader(cube_filename, ml_table, force=False):
+def ml2header_updheader(cube_filename, ml_table, force=False, columns=None, sname_col=None):
     '''
     Updates a S-CUBES raw cube primary header with the masterlist 
     information.
@@ -24,21 +24,39 @@ def ml2header_updheader(cube_filename, ml_table, force=False):
     force : bool, optional
         Force the update the key value is the key is existent at the 
         S-CUBES header. 
+        
+    columns : list of int, optional
+        List of column indices to selectively copy. If None, all are copied.
+        
+    sname_col : int, optional
+        Column index representing the SNAME of the object. If None, uses "SNAME".
     '''
+    import numpy as np
+
     with fits.open(cube_filename, 'update') as hdul:
         hdu = hdul['PRIMARY']
 
         # SNAME CONTROL
-        sname = hdu.header.get('OBJECT', None)
+        sname = hdu.header.get('GALAXY', hdu.header.get('OBJECT', None))
         if sname is None:
             print_level('header: missing SNAME information')
             sys.exit(1)
-        if sname not in ml_table['SNAME']:
-            print_level(f'masterlist: {sname}: missing SNAME information')
+            
+        sname_col_name = 'SNAME'
+        if sname_col is not None and sname_col < len(ml_table.colnames):
+            sname_col_name = ml_table.colnames[sname_col]
+            
+        if sname not in ml_table[sname_col_name]:
+            print_level(f'masterlist: {sname}: missing SNAME information in column {sname_col_name}')
             sys.exit(1)
 
-        mlcut = ml_table[ml_table['SNAME'] == sname]
-        for col in ml_table.colnames:
+        mlcut = ml_table[ml_table[sname_col_name] == sname]
+        
+        colnames = ml_table.colnames
+        if columns is not None:
+            colnames = [ml_table.colnames[i] for i in columns if i < len(ml_table.colnames)]
+
+        for col in colnames:
             v = mlcut[col][0]
             desc = None
             if v is np.ma.masked:
@@ -92,6 +110,7 @@ SCUBES_ARGS = {
     'username': ['U', dict(default=None, help='S-PLUS cloud username.')],
     'password': ['P', dict(default=None, help='S-PLUS cloud password.')],
     'force_mem': ['F', dict(action='store_true', default=False, help='Force memory mapping of downloaded input files.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'field': ['pos', dict(metavar='SPLUS_TILE', help='Name of the S-PLUS field')],
@@ -142,7 +161,7 @@ def scubes():
     SCubes(
         ra=args.ra, dec=args.dec, field=args.field, 
         size=args.size, username=args.username, password=args.password,
-        verbose=args.verbose,
+        verbose=args.verbose, server=args.server,
     ).create_cube(
         objname=args.object, 
         outpath=join(args.workdir, args.object), 
@@ -169,6 +188,7 @@ SCUBESML_ARGS = {
     'password': ['P', dict(default=None, help='S-PLUS Cloud password.')],
     'sname': ['O', dict(default=None, metavar='OBJECT_SNAME', help="Object's masterlist SNAME")],
     'force_mem': ['F', dict(action='store_true', default=False, help='Force memory mapping of downloaded input files.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     'masterlist': ['pos', dict(metavar='MASTERLIST', help='Path to masterlist file')]
 }
@@ -220,7 +240,14 @@ def scubesml():
     parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__scubes_version__))
     args = scubesml_argparse(parser.parse_args(args=sys.argv[1:]))
 
-    sname_list = args.ml['SNAME'] if args.sname is None else [args.sname]
+    if args.sname is not None:
+        if args.sname in args.ml['SNAME']:
+            sname_list = [args.sname]
+        else:
+            print_level(f'{args.sname}: SNAME not found in masterlist')
+            sys.exit(1)
+    else:
+        sname_list = args.ml['SNAME']
 
     for sname in sname_list:
         mlcut = args.ml[args.ml['SNAME'] == sname]
@@ -228,12 +255,13 @@ def scubesml():
         dec = mlcut['DEC__deg'][0]
         field = mlcut['FIELD'][0]
         size_pix = max(round(args.size_multiplicator*float(mlcut['SIZE__pix'][0])/2)*2, args.min_size)
-        #print(size_pix)
-        #print(ra, dec, field, size_pix)
         creator = SCubes(
             ra=ra, dec=dec, field=field, 
             size=size_pix, 
-            username=args.username, password=args.password, verbose=args.verbose
+            username=args.username, 
+            password=args.password, 
+            verbose=args.verbose, 
+            server=args.server
         )
         #try:
         creator.create_cube(objname=sname, outpath=args.workdir, force=args.force, force_mem=args.force_mem)

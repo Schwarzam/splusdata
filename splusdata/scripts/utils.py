@@ -16,6 +16,7 @@ FIELD_FRAME_ARGS = {
     'password': ['P', dict(default=None, help='S-PLUS cloud password.')],
     'weight': ['w', dict(action='store_true', default=False, help='Download the weight map associated to the stamp.')],   
     'data_release': ['D', dict(default='DR4', help='S-PLUS data release version.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'field': ['pos', dict(metavar='FIELD', help='Field identifier, e.g., "SPLUS-n01s10"')],
@@ -42,7 +43,7 @@ def field_frame():
     parser = create_parser(args_dict=FIELD_FRAME_ARGS, program_description=FIELD_FRAME_PROG_DESC)
     args = parser.parse_args(args=sys.argv[1:])
 
-    conn = Core(args.username, args.password)
+    conn = Core(args.username, args.password, SERVER_IP='https://splus.cloud' if args.server is None else args.server)
 
     print_level(f'Downloading field {args.field} - band {args.band}', 1, args.verbose)
     outfile = f'{args.field}_{args.band}.fits.fz'
@@ -58,6 +59,7 @@ STAMP_ARGS = {
     'size_unit': ['u', dict(metavar='SIZE_UNIT', choices=['arcsec', 'arcmin', 'pixels'], default='pix', help='Unit of the size parameter (arcsec, arcmin, pixels).')],
     'data_release': ['D', dict(default='DR4', help='S-PLUS data release version.')],
     'outfile': ['o', dict(default='stamp.fits.fz', help='Output filename for the stamp FITS image.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'ra': ['pos', dict(metavar='RA', help="Object's right ascension")],
@@ -86,7 +88,7 @@ def stamp():
     parser = create_parser(args_dict=STAMP_ARGS, program_description=STAMP_PROG_DESC)
     args = parser.parse_args(args=sys.argv[1:])
 
-    conn = Core(args.username, args.password)
+    conn = Core(args.username, args.password, SERVER_IP='https://splus.cloud' if args.server is None else args.server)
     print_level(f'Downloading stamp at RA: {args.ra}, DEC: {args.dec} - band {args.band}', 1, args.verbose)
     conn.stamp(args.ra, args.dec, args.size, args.band, 
                weight=args.weight, field_name=args.field_name, 
@@ -103,7 +105,8 @@ LUPTON_RGB_ARGS = {
     'data_release': ['D', dict(default='DR4', help='S-PLUS data release version.')],
     'outfile': ['o', dict(default='lupton_RGB.png', help='Output filename for the Lupton RGB image.')],
     'Q': ['Q', dict(type=float, default=8, help='Lupton Q parameter (default: 8).')],
-    'stretch': ['s', dict(type=float, default=3, help='Lupton stretch parameter (default: 3).')],
+    'stretch': ['S', dict(type=float, default=3, help='Lupton stretch parameter (default: 3).')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'ra': ['pos', dict(metavar='RA', help="Object's right ascension")],
@@ -149,7 +152,7 @@ def lupton_rgb():
     parser = create_parser(args_dict=LUPTON_RGB_ARGS, program_description=LUPTON_RGB_PROG_DESC)
     args = lupton_rgb_argparse(args=parser.parse_args(args=sys.argv[1:]))
 
-    conn = Core(args.username, args.password)
+    conn = Core(args.username, args.password, SERVER_IP='https://splus.cloud' if args.server is None else args.server)
 
     print_level(f'Downloading Lupton RGB image at RA: {args.ra}, DEC: {args.dec}', 1, args.verbose)
     conn.lupton_rgb(args.ra, args.dec, args.size, R=args.R, G=args.G, B=args.B,
@@ -170,8 +173,9 @@ TRILOGY_IMAGE_ARGS = {
     'data_release': ['D', dict(default='DR4', help='S-PLUS data release version.')],
     'outfile': ['o', dict(default='trilogy_image.png', help='Output filename for the Lupton RGB image.')],
     'noiselum': ['n', dict(type=float, default=0.15, help='Controls noise luminance suppression')],
-    'satpercent': ['s', dict(type=float, default=0.15, help='Percentile value for saturation clipping (default: 0.15).')],
+    'satpercent': ['S', dict(type=float, default=0.15, help='Percentile value for saturation clipping (default: 0.15).')],
     'colorsatfac': ['c', dict(type=float, default=2, help='Factor for color saturation (default: 2).')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'ra': ['pos', dict(metavar='RA', help="Object's right ascension")],
@@ -199,7 +203,7 @@ def trilogy_image():
     parser = create_parser(args_dict=TRILOGY_IMAGE_ARGS, program_description=TRILOGY_IMAGE_PROG_DESC)
     args = parser.parse_args(args=sys.argv[1:])
 
-    conn = Core(args.username, args.password)
+    conn = Core(args.username, args.password, SERVER_IP='https://splus.cloud' if args.server is None else args.server)
 
     print_level(f'Downloading Trilogy RGB image at RA: {args.ra}, DEC: {args.dec}', 1, args.verbose)
     conn.trilogy_image(args.ra, args.dec, args.size, R=args.red, G=args.green, B=args.blue,
@@ -219,6 +223,7 @@ CALIBRATED_STAMP_ARGS = {
     'size_unit': ['u', dict(metavar='SIZE_UNIT', choices=['arcsec', 'arcmin', 'pixels'], default='pix', help='Unit of the size parameter (arcsec, arcmin, pixels).')],
     'data_release': ['D', dict(default='DR4', help='S-PLUS data release version.')],
     'outfile': ['o', dict(default='stamp.fits.fz', help='Output filename for the stamp FITS image.')],
+    'server': ['s', dict(default=None, help='Server URL to retrieve S-PLUS data. If None, the default server will be used.')],
 
     # positional arguments
     'ra': ['pos', dict(metavar='RA', help="Object's right ascension")],
@@ -250,7 +255,7 @@ def calibrated_stamp():
     parser = create_parser(args_dict=CALIBRATED_STAMP_ARGS, program_description=CALIBRATED_STAMP_PROG_DESC)
     args = parser.parse_args(args=sys.argv[1:])
 
-    conn = Core(args.username, args.password)
+    conn = Core(args.username, args.password, SERVER_IP='https://splus.cloud' if args.server is None else args.server)
     print_level(f'Downloading calibrated stamp at RA: {args.ra}, DEC: {args.dec} - band {args.band}', 1, args.verbose)
     conn.calibrated_stamp(args.ra, args.dec, args.size, args.band, 
                weight=args.weight, field_name=args.field_name, 
