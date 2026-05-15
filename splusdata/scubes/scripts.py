@@ -251,10 +251,10 @@ def scubesml():
 
     for sname in sname_list:
         mlcut = args.ml[args.ml['SNAME'] == sname]
-        ra = mlcut['RA__deg'][0]
-        dec = mlcut['DEC__deg'][0]
-        field = mlcut['FIELD'][0]
-        size_pix = max(round(args.size_multiplicator*float(mlcut['SIZE__pix'][0])/2)*2, args.min_size)
+        ra = mlcut['RA__deg'].item()
+        dec = mlcut['DEC__deg'].item()
+        field = mlcut['FIELD'].item()
+        size_pix = max(round(args.size_multiplicator*float(mlcut['SIZE__pix'].item())/2)*2, args.min_size)
         creator = SCubes(
             ra=ra, dec=dec, field=field, 
             size=size_pix, 
